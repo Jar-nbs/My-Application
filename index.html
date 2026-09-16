@@ -87,6 +87,7 @@
   .wordmark-text { display: flex; flex-direction: column; gap: 1px; }
   .wordmark-text h1 { font-size: 26px; font-weight: 800; }
   .wordmark-text span { font-size: 13px; color: var(--ink-soft); }
+  .version { font-size: 11px; font-weight: 700; color: var(--ink-faint); vertical-align: middle; margin-left: 6px; }
 
   /* ---------- View switching ---------- */
   .view { animation: fade-in .28s ease both; }
@@ -367,7 +368,7 @@
   <div class="wordmark">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 16.5h6M9 9.5h2"/></svg>
     <div class="wordmark-text">
-      <h1>Folio</h1>
+      <h1>Folio <span class="version" id="app-version">v1.0.0</span></h1>
       <span>ชุดเครื่องมือจัดการไฟล์ส่วนตัว</span>
     </div>
   </div>
