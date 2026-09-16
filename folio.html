@@ -1,0 +1,1228 @@
+<title>Folio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --paper: #f1edfb;
+    --surface: #ffffff;
+    --surface-2: #f6f2fd;
+    --ink: #15121f;
+    --ink-soft: #5c5768;
+    --ink-faint: #948fa3;
+    --line: #e7e1f3;
+    --line-strong: #15121f;
+    --accent: #9b6ef3;
+    --accent-deep: #7c4fd6;
+    --accent-soft: #efe1fd;
+    --accent-ink: #ffffff;
+    --good: #2f9e6e;
+    --good-soft: #dff5ea;
+    --bad: #ef4b4b;
+    --bad-soft: #fde3e3;
+    --shadow: 0 1px 2px rgba(21, 18, 31, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17141f;
+      --surface: #211d2e;
+      --surface-2: #2a2438;
+      --ink: #f1edfa;
+      --ink-soft: #b7b0c7;
+      --ink-faint: #857e97;
+      --line: #362f47;
+      --line-strong: #5a4f74;
+      --accent: #b494f5;
+      --accent-deep: #d3bdfa;
+      --accent-soft: #362a52;
+      --accent-ink: #17141f;
+      --good: #4fbf8f;
+      --good-soft: #1c3a2d;
+      --bad: #f07272;
+      --bad-soft: #3a2222;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17141f;
+    --surface: #211d2e;
+    --surface-2: #2a2438;
+    --ink: #f1edfa;
+    --ink-soft: #b7b0c7;
+    --ink-faint: #857e97;
+    --line: #362f47;
+    --line-strong: #5a4f74;
+    --accent: #b494f5;
+    --accent-deep: #d3bdfa;
+    --accent-soft: #362a52;
+    --accent-ink: #17141f;
+    --good: #4fbf8f;
+    --good-soft: #1c3a2d;
+    --bad: #f07272;
+    --bad-soft: #3a2222;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 800; letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+  button, select, input { font-family: inherit; }
+
+  .app { max-width: 980px; margin: 0 auto; padding: 48px 28px 80px; }
+
+  /* ---------- Header ---------- */
+  .wordmark { display: flex; align-items: center; gap: 12px; }
+  .wordmark svg { width: 34px; height: 34px; color: var(--accent); flex: none; }
+  .wordmark-text { display: flex; flex-direction: column; gap: 1px; }
+  .wordmark-text h1 { font-size: 26px; font-weight: 800; }
+  .wordmark-text span { font-size: 13px; color: var(--ink-soft); }
+
+  /* ---------- View switching ---------- */
+  .view { animation: fade-in .28s ease both; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  [hidden] { display: none !important; }
+
+  /* ---------- Home grid ---------- */
+  .home-head { margin: 40px 0 28px; }
+  .home-head p { color: var(--ink-soft); font-size: 15px; max-width: 46ch; margin-top: 6px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+  }
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+    background: var(--surface);
+    border: 1.5px solid var(--line-strong);
+    border-radius: 20px;
+    padding: 20px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .tile:not(.disabled) { background: var(--accent-soft); }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 6px 0 0 var(--line-strong); }
+  .tile:active { transform: translateY(0); box-shadow: var(--shadow); }
+  .tile-icon {
+    position: relative;
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink);
+  }
+  .tile-icon svg { width: 28px; height: 28px; }
+  .tile-icon::after {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--surface);
+  }
+  .tile h3 { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .tile p { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .tile-tag {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 11px; font-weight: 700; letter-spacing: .03em;
+    padding: 3px 8px; border-radius: 999px;
+    background: var(--surface); color: var(--good);
+  }
+
+  .tile.disabled { cursor: default; opacity: .6; }
+  .tile.disabled:hover { transform: none; box-shadow: var(--shadow); }
+  .tile.disabled .tile-icon { color: var(--ink-faint); }
+  .tile.disabled .tile-icon::after { display: none; }
+  .tile.disabled .tile-tag { background: var(--surface-2); color: var(--ink-faint); }
+
+  /* ---------- Toolkit view ---------- */
+  .back-row { margin: 36px 0 20px; }
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 14px; font-weight: 600; cursor: pointer; padding: 6px 0;
+  }
+  .back-btn:hover { color: var(--ink); }
+  .back-btn svg { width: 16px; height: 16px; }
+
+  .tool-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .tool-head .tile-icon { width: 40px; height: 40px; flex: none; }
+  .tool-head .tile-icon svg { width: 24px; height: 24px; }
+  .tool-head h2 { font-size: 24px; font-weight: 800; }
+  .tool-head span { font-size: 13px; color: var(--ink-soft); }
+
+  /* Dropzone */
+  .dropzone {
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 20px;
+    background: var(--surface);
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone svg { width: 30px; height: 30px; color: var(--ink-faint); margin-bottom: 10px; }
+  .dropzone strong { font-size: 15px; font-weight: 700; }
+  .dropzone p { font-size: 13px; color: var(--ink-soft); margin: 4px 0 0; }
+  .dropzone .browse { color: var(--accent-deep); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .upload-error { color: var(--bad); font-size: 13px; margin-top: 10px; text-align: center; }
+
+  /* Document summary */
+  .doc-card {
+    display: flex; gap: 16px; align-items: center;
+    background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 18px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .doc-thumb {
+    width: 52px; height: 68px; flex: none;
+    border-radius: 8px; overflow: hidden;
+    background: var(--surface-2); border: 1.5px solid var(--line-strong);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .doc-thumb canvas, .doc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .doc-meta { flex: 1; min-width: 0; }
+  .doc-meta .name { font-weight: 700; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta .sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+  .doc-meta .sub .mono { color: var(--ink-faint); }
+  .doc-clear {
+    flex: none; width: 32px; height: 32px; border-radius: 10px;
+    border: none; background: var(--surface-2);
+    color: var(--ink-soft); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .doc-clear:hover { color: var(--bad); background: var(--bad-soft); }
+  .doc-clear svg { width: 15px; height: 15px; }
+
+  .doc-lock-note {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12.5px; color: var(--good); margin-top: 2px; font-weight: 600;
+  }
+  .doc-lock-note svg { width: 12px; height: 12px; }
+
+  /* Password prompt */
+  .password-card {
+    display: flex; flex-direction: column; gap: 12px;
+    background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 18px;
+    padding: 16px; box-shadow: var(--shadow); margin-top: 16px;
+  }
+  .password-head { display: flex; align-items: center; gap: 12px; }
+  .password-head .tile-icon { width: 38px; height: 38px; flex: none; }
+  .password-head .tile-icon svg { width: 22px; height: 22px; }
+  .password-head .name { font-weight: 700; font-size: 14.5px; }
+  .password-head .sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+  .password-row { display: flex; gap: 10px; }
+  .password-row input { flex: 1; }
+  .password-row .btn { width: auto; margin-top: 0; padding: 9px 18px; white-space: nowrap; }
+
+  /* Tool panels */
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 20px;
+    padding: 20px; box-shadow: var(--shadow);
+    opacity: .45; pointer-events: none; transition: opacity .15s ease;
+  }
+  .panel.active { opacity: 1; pointer-events: auto; }
+
+  .panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .panel-head .icon { position: relative; width: 30px; height: 30px; color: var(--ink); display: flex; align-items: center; justify-content: center; flex: none; }
+  .panel-head .icon svg { width: 20px; height: 20px; }
+  .panel-head .icon::after {
+    content: ''; position: absolute; top: -1px; right: -1px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--surface);
+  }
+  .panel-head h3 { font-size: 15.5px; font-weight: 700; }
+
+  .field { margin-bottom: 14px; }
+  .field:last-of-type { margin-bottom: 0; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  select, input[type="text"], input[type="password"] {
+    width: 100%; padding: 9px 10px; border-radius: 10px;
+    border: 1.5px solid var(--line-strong); background: var(--surface-2); color: var(--ink);
+    font-size: 13.5px;
+  }
+  select:focus, input[type="text"]:focus, input[type="password"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input[type="text"]::placeholder, input[type="password"]::placeholder { color: var(--ink-faint); }
+
+  .radio-group { display: flex; flex-direction: column; gap: 8px; }
+  .radio-row { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; }
+  .radio-row input { accent-color: var(--accent); width: 15px; height: 15px; }
+
+  .btn {
+    width: 100%; margin-top: 16px; padding: 11px 14px; border-radius: 14px;
+    border: none; background: var(--accent); color: var(--accent-ink);
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn:hover { background: var(--accent-deep); }
+  .btn:disabled { background: var(--surface-2); color: var(--ink-faint); cursor: not-allowed; }
+
+  .progress-track { height: 5px; border-radius: 999px; background: var(--surface-2); margin-top: 12px; overflow: hidden; display: none; }
+  .progress-track.show { display: block; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 999px; width: 0%; transition: width .15s ease; }
+
+  .status-line { margin-top: 10px; font-size: 12.5px; min-height: 16px; }
+  .status-line.good { color: var(--good); }
+  .status-line.bad { color: var(--bad); }
+  .status-line.neutral { color: var(--ink-soft); }
+
+  .spinner {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.4); border-top-color: currentColor;
+    animation: spin .7s linear infinite; display: none;
+  }
+  .btn.busy .spinner { display: inline-block; }
+  .btn.busy .btn-label { opacity: .85; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hint-banner {
+    margin-top: 18px; font-size: 12.5px; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hint-banner svg { width: 14px; height: 14px; flex: none; }
+
+  .btn.btn-inline { width: auto; margin-top: 0; padding: 10px 22px; }
+
+  /* ---------- Gallery ---------- */
+  .gallery-head { margin: 4px 0 2px; }
+  .gallery-head h2 { font-size: 22px; font-weight: 800; }
+  .gallery-head span { font-size: 13px; color: var(--ink-soft); }
+
+  .gallery-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px; gap: 12px; flex-wrap: wrap;
+  }
+  .toolbar-btn {
+    background: var(--surface); border: 1.5px solid var(--line-strong); color: var(--ink);
+    font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 10px; cursor: pointer;
+  }
+  .toolbar-btn:hover { border-color: var(--accent); color: var(--accent-deep); }
+  .gallery-counter { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .gallery-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 12px; margin-top: 14px; padding-bottom: 96px;
+  }
+  .gallery-item {
+    position: relative; display: block; aspect-ratio: 3 / 4;
+    border-radius: 16px; overflow: hidden; cursor: pointer;
+    border: 1.5px solid var(--line-strong); background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .gallery-item img {
+    width: 100%; height: 100%; object-fit: contain; display: block;
+    background: var(--surface-2); transition: opacity .15s ease;
+  }
+  .gallery-item:not(.selected) img { opacity: .35; }
+  .gallery-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow); }
+  .gallery-item-checkbox {
+    position: absolute; top: 8px; left: 8px; z-index: 2;
+    width: 19px; height: 19px; accent-color: var(--accent); cursor: pointer;
+  }
+  .gallery-item-label {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
+    color: #fff; font-size: 11px; font-weight: 700; text-align: center;
+    padding: 10px 4px 4px;
+  }
+
+  .gallery-footer {
+    position: sticky; bottom: 16px; margin-top: 18px;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 18px;
+    padding: 12px 16px; box-shadow: var(--shadow);
+  }
+  .gallery-footer .status-line { margin-top: 0; flex: 1; min-width: 140px; }
+  .gallery-save-actions { display: flex; align-items: center; gap: 12px; }
+  .link-btn {
+    background: none; border: none; color: var(--ink-soft);
+    font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px;
+    cursor: pointer; padding: 4px; white-space: nowrap;
+  }
+  .link-btn:hover { color: var(--accent-deep); }
+  .link-btn:disabled { color: var(--ink-faint); cursor: not-allowed; text-decoration: none; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .view, .tile { animation: none !important; transition: none !important; }
+    .spinner { animation-duration: 1.4s; }
+  }
+</style>
+
+<div class="app">
+  <div class="wordmark">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 16.5h6M9 9.5h2"/></svg>
+    <div class="wordmark-text">
+      <h1>Folio</h1>
+      <span>ชุดเครื่องมือจัดการไฟล์ส่วนตัว</span>
+    </div>
+  </div>
+
+  <!-- ============ HOME VIEW ============ -->
+  <section id="view-home" class="view">
+    <div class="home-head">
+      <h2 style="font-size:19px;font-weight:700;color:var(--ink-soft);">เลือกเครื่องมือ</h2>
+      <p>รวมโปรแกรมเล็กๆ ที่ใช้บ่อยไว้ในที่เดียว ทุกอย่างประมวลผลในเบราว์เซอร์ของคุณ ไฟล์ไม่ถูกส่งขึ้นเซิร์ฟเวอร์ใดๆ</p>
+    </div>
+
+    <div class="grid">
+      <button class="tile" id="tile-pdf" type="button">
+        <span class="tile-tag">พร้อมใช้งาน</span>
+        <span class="tile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 12.5h6M9 16h6M9 9h2"/></svg>
+        </span>
+        <h3>เครื่องมือ PDF</h3>
+        <p>แปลงหน้า PDF เป็นรูปภาพ หรือแยกไฟล์ PDF ออกเป็นหลายไฟล์</p>
+      </button>
+
+      <div class="tile disabled" role="group" aria-disabled="true">
+        <span class="tile-tag">เร็วๆ นี้</span>
+        <span class="tile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="11" height="11" rx="1.5"/><path d="M9 15v2.5A1.5 1.5 0 0 0 10.5 19H18a1.5 1.5 0 0 0 1.5-1.5V10a1.5 1.5 0 0 0-1.5-1.5H15.5"/></svg>
+        </span>
+        <h3>รวมไฟล์ PDF</h3>
+        <p>รวมหลายไฟล์ PDF เป็นไฟล์เดียวตามลำดับที่กำหนด</p>
+      </div>
+
+      <div class="tile disabled" role="group" aria-disabled="true">
+        <span class="tile-tag">เร็วๆ นี้</span>
+        <span class="tile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 15l3-3.5L14.5 14 17 10.5"/><circle cx="8.5" cy="8.5" r="1"/></svg>
+        </span>
+        <h3>บีบอัดรูปภาพ</h3>
+        <p>ลดขนาดไฟล์ภาพโดยรักษาคุณภาพที่ตั้งไว้</p>
+      </div>
+
+      <div class="tile disabled" role="group" aria-disabled="true">
+        <span class="tile-tag">เร็วๆ นี้</span>
+        <span class="tile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.3 15.3 20 20"/><path d="M7.5 10.5h6"/></svg>
+        </span>
+        <h3>อ่านข้อความจากภาพ</h3>
+        <p>แปลงข้อความในรูปภาพหรือเอกสารสแกนให้คัดลอกได้</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PDF TOOLKIT VIEW ============ -->
+  <section id="view-pdf" class="view" hidden>
+    <div class="back-row">
+      <button class="back-btn" id="btn-back" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        กลับหน้าหลัก
+      </button>
+    </div>
+
+    <div class="tool-head">
+      <span class="tile-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v4h4"/><path d="M9 12.5h6M9 16h6M9 9h2"/></svg>
+      </span>
+      <div>
+        <h2>เครื่องมือ PDF</h2>
+        <span>อัปโหลดไฟล์ PDF แล้วแปลงเป็นรูปภาพ หรือแยกออกเป็นหลายไฟล์</span>
+      </div>
+    </div>
+
+    <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="อัปโหลดไฟล์ PDF">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      <div><strong>ลากไฟล์ PDF มาวางที่นี่</strong></div>
+      <p>หรือ <span class="browse">เลือกไฟล์จากเครื่อง</span> — ประมวลผลในเบราว์เซอร์ทั้งหมด</p>
+      <div class="upload-error" id="upload-error"></div>
+    </div>
+    <input type="file" id="file-input" accept="application/pdf,.pdf" class="visually-hidden" />
+
+    <div id="password-card" class="password-card" style="display:none;">
+      <div class="password-head">
+        <span class="tile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15" r="1.4"/></svg>
+        </span>
+        <div>
+          <div class="name" id="password-filename">—</div>
+          <div class="sub">ไฟล์นี้ถูกป้องกันด้วยรหัสผ่าน กรอกรหัสเพื่อเปิดใช้งาน</div>
+        </div>
+      </div>
+      <div class="password-row">
+        <input type="password" id="password-input" placeholder="รหัสผ่าน" autocomplete="off" />
+        <button class="btn" id="btn-unlock" type="button">
+          <span class="spinner"></span>
+          <span class="btn-label">ปลดล็อก</span>
+        </button>
+      </div>
+      <div class="status-line bad" id="password-error"></div>
+    </div>
+
+    <div id="doc-card" class="doc-card" style="display:none; margin-top:16px;">
+      <div class="doc-thumb" id="doc-thumb"></div>
+      <div class="doc-meta">
+        <div class="name" id="doc-name">—</div>
+        <div class="sub"><span id="doc-pages">—</span> · <span class="mono" id="doc-size">—</span></div>
+        <div class="doc-lock-note" id="doc-lock-note" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          ปลดล็อกด้วยรหัสผ่านแล้ว
+        </div>
+      </div>
+      <button class="doc-clear" id="doc-clear" type="button" aria-label="นำไฟล์ออก">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="panels">
+      <!-- Convert to images -->
+      <div class="panel" id="panel-convert">
+        <div class="panel-head">
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 15.5l5-5 4 4 3-3 4.5 4.5"/><circle cx="8.5" cy="9" r="1.4"/></svg></span>
+          <h3>แปลงเป็นรูปภาพ</h3>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="convert-format">รูปแบบไฟล์</label>
+            <select id="convert-format">
+              <option value="png">PNG</option>
+              <option value="jpeg">JPEG</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="convert-scale">ความละเอียด</label>
+            <select id="convert-scale">
+              <option value="1">มาตรฐาน</option>
+              <option value="2" selected>คมชัด (2x)</option>
+              <option value="3">คมชัดสูง (3x)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="convert-pages">หน้าที่ต้องการ</label>
+          <input type="text" id="convert-pages" placeholder="ทุกหน้า — หรือระบุเช่น 1,3,5-7" />
+        </div>
+        <button class="btn" id="btn-convert" type="button">
+          <span class="spinner"></span>
+          <span class="btn-label">แปลงเป็นรูปภาพ</span>
+        </button>
+        <div class="progress-track" id="convert-progress"><div class="progress-fill"></div></div>
+        <div class="status-line" id="convert-status"></div>
+      </div>
+
+      <!-- Split -->
+      <div class="panel" id="panel-split">
+        <div class="panel-head">
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="7.5" height="16" rx="1.5"/><rect x="13" y="4" width="7.5" height="16" rx="1.5" stroke-dasharray="2.5 2.5"/></svg></span>
+          <h3>แยกไฟล์ PDF</h3>
+        </div>
+        <div class="field">
+          <div class="radio-group">
+            <label class="radio-row"><input type="radio" name="split-mode" value="each" checked /> แยกทุกหน้าเป็นไฟล์เดี่ยว</label>
+            <label class="radio-row"><input type="radio" name="split-mode" value="custom" /> กำหนดช่วงหน้าเอง</label>
+          </div>
+        </div>
+        <div class="field" id="split-ranges-field" style="display:none;">
+          <label for="split-ranges">ช่วงหน้า (แต่ละกลุ่มคือ 1 ไฟล์)</label>
+          <input type="text" id="split-ranges" placeholder="เช่น 1-3, 4, 5-8" />
+        </div>
+        <button class="btn" id="btn-split" type="button">
+          <span class="spinner"></span>
+          <span class="btn-label">แยกและบันทึก</span>
+        </button>
+        <div class="progress-track" id="split-progress"><div class="progress-fill"></div></div>
+        <div class="status-line" id="split-status"></div>
+      </div>
+    </div>
+
+    <div class="hint-banner" id="downloads-hint" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+      การบันทึกไฟล์ไม่พร้อมใช้งานในมุมมองนี้ ลองเปิดหน้านี้แบบเต็มหน้าจอ
+    </div>
+  </section>
+
+  <!-- ============ GALLERY VIEW ============ -->
+  <section id="view-gallery" class="view" hidden>
+    <div class="back-row">
+      <button class="back-btn" id="btn-gallery-back" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        ยกเลิกและกลับไปแก้ไข
+      </button>
+    </div>
+
+    <div class="gallery-head">
+      <h2>ผลลัพธ์การแปลง</h2>
+      <span>แตะรูปเพื่อเลือก/ไม่เลือก แล้วกดบันทึก</span>
+    </div>
+
+    <div class="gallery-toolbar">
+      <button class="toolbar-btn" id="btn-gallery-toggle-all" type="button">ไม่เลือกเลย</button>
+      <span class="gallery-counter" id="gallery-counter">เลือก 0 จาก 0 รูป</span>
+    </div>
+
+    <div class="gallery-grid" id="gallery-grid"></div>
+
+    <div class="gallery-footer">
+      <div class="status-line" id="gallery-status"></div>
+      <div class="gallery-save-actions">
+        <button class="link-btn" id="btn-gallery-save-zip" type="button">รวมเป็น ZIP ไฟล์เดียว</button>
+        <button class="btn btn-inline" id="btn-gallery-save" type="button">
+          <span class="spinner"></span>
+          <span class="btn-label" id="gallery-save-label">บันทึก</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@cantoo/pdf-lib@2.11.0/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* pdf.worker.min.js above registers window.pdfjsWorker, which pdf.js uses
+     as an in-page "fake worker" — a cross-origin `new Worker(url)` throws
+     a SecurityError, so we deliberately skip GlobalWorkerOptions.workerSrc. */
+
+  /* Saving files works differently depending on where this page runs:
+     - Inside a Claude Artifact, window.claude.use('downloads') is the only
+       way to hand a file to the viewer, and it requires one explicit accept
+       per file — there's no batched multi-file call.
+     - Deployed standalone (a normal URL opened in Safari/Chrome), the page
+       can use ordinary web APIs instead: the Web Share API can hand several
+       image files to the OS share sheet in a single call (on iOS this
+       becomes one "Save to Photos" action for the whole batch), and plain
+       <a download> blob links work for everything else without any
+       per-file confirmation UI of our own. */
+  var CLAUDE_MODE = !!(window.claude && typeof window.claude.use === 'function');
+  var claudeDownloads = null;
+  if (CLAUDE_MODE) {
+    window.claude.use('downloads').then(function (api) {
+      claudeDownloads = api;
+      if (!api) document.getElementById('downloads-hint').style.display = 'flex';
+    }).catch(function () {
+      document.getElementById('downloads-hint').style.display = 'flex';
+    });
+  }
+
+  function triggerBlobDownload(filename, blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+
+  function canShareFiles(files) {
+    try {
+      return !!(navigator.share && navigator.canShare && navigator.canShare({ files: files }));
+    } catch (e) {
+      return false;
+    }
+  }
+
+  var state = { pdf: null };
+
+  // ---------- View navigation ----------
+  var viewHome = document.getElementById('view-home');
+  var viewPdf = document.getElementById('view-pdf');
+  var viewGallery = document.getElementById('view-gallery');
+  document.getElementById('tile-pdf').addEventListener('click', function () {
+    viewHome.hidden = true;
+    viewPdf.hidden = false;
+  });
+  document.getElementById('btn-back').addEventListener('click', function () {
+    viewPdf.hidden = true;
+    viewHome.hidden = false;
+  });
+
+  // ---------- Helpers ----------
+  function range(a, b) { var r = []; for (var i = a; i <= b; i++) r.push(i); return r; }
+  function pad(n, max) { var len = String(max).length; var s = String(n); while (s.length < len) s = '0' + s; return s; }
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function parsePageList(spec, maxPage) {
+    if (!spec || !spec.trim()) return null;
+    var parts = spec.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    var pages = {};
+    var out = [];
+    for (var i = 0; i < parts.length; i++) {
+      var m = parts[i].match(/^(\d+)(?:-(\d+))?$/);
+      if (!m) throw new Error('รูปแบบไม่ถูกต้อง: "' + parts[i] + '"');
+      var start = parseInt(m[1], 10);
+      var end = m[2] ? parseInt(m[2], 10) : start;
+      if (start < 1 || end < 1 || start > maxPage || end > maxPage || start > end) {
+        throw new Error('หมายเลขหน้าไม่ถูกต้อง: "' + parts[i] + '" (เอกสารมี ' + maxPage + ' หน้า)');
+      }
+      for (var p = start; p <= end; p++) { if (!pages[p]) { pages[p] = true; out.push(p); } }
+    }
+    out.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  function parsePageGroups(spec, maxPage) {
+    var parts = spec.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!parts.length) throw new Error('กรุณาระบุช่วงหน้าที่ต้องการแยก');
+    var groups = [];
+    for (var i = 0; i < parts.length; i++) {
+      var m = parts[i].match(/^(\d+)(?:-(\d+))?$/);
+      if (!m) throw new Error('รูปแบบไม่ถูกต้อง: "' + parts[i] + '"');
+      var start = parseInt(m[1], 10);
+      var end = m[2] ? parseInt(m[2], 10) : start;
+      if (start < 1 || end < 1 || start > maxPage || end > maxPage || start > end) {
+        throw new Error('หมายเลขหน้าไม่ถูกต้อง: "' + parts[i] + '" (เอกสารมี ' + maxPage + ' หน้า)');
+      }
+      var pages = [];
+      for (var p = start; p <= end; p++) pages.push(p);
+      groups.push(pages);
+    }
+    return groups;
+  }
+
+  async function renderPageToCanvas(pdfDoc, pageNum, scale) {
+    var page = await pdfDoc.getPage(pageNum);
+    var viewport = page.getViewport({ scale: scale });
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    var ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    return canvas;
+  }
+
+  function canvasToBlob(canvas, mime, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) resolve(blob); else reject(new Error('แปลงรูปภาพล้มเหลว'));
+      }, mime, quality);
+    });
+  }
+
+  async function deliverFiles(files, zipBaseName) {
+    var finalName, finalBlob;
+    if (files.length === 1) {
+      finalName = files[0].name;
+      finalBlob = files[0].blob;
+    } else {
+      var zip = new JSZip();
+      for (var i = 0; i < files.length; i++) zip.file(files[i].name, files[i].blob);
+      finalBlob = await zip.generateAsync({ type: 'blob' });
+      finalName = zipBaseName + '.zip';
+    }
+
+    if (CLAUDE_MODE) {
+      if (!claudeDownloads) throw new Error('การบันทึกไฟล์ไม่พร้อมใช้งานในมุมมองนี้');
+      return claudeDownloads.save({ filename: finalName, data: finalBlob });
+    }
+
+    triggerBlobDownload(finalName, finalBlob);
+    return { status: 'saved' };
+  }
+
+  function describeDownloadError(err) {
+    if (err && err.code === 'declined') return 'ยกเลิกการบันทึกไฟล์';
+    if (err && err.code === 'rate_limited') return 'กำลังมีการบันทึกไฟล์อื่นอยู่ ลองใหม่อีกครั้ง';
+    if (err && err.code === 'too_large') return 'ไฟล์มีขนาดใหญ่เกินไปสำหรับปลายทางที่เลือก';
+    if (err && err.message) return err.message;
+    return 'เกิดข้อผิดพลาดระหว่างบันทึกไฟล์';
+  }
+
+  // ---------- Upload ----------
+  var dropzone = document.getElementById('dropzone');
+  var fileInput = document.getElementById('file-input');
+  var uploadError = document.getElementById('upload-error');
+  var docCard = document.getElementById('doc-card');
+  var docThumb = document.getElementById('doc-thumb');
+  var docName = document.getElementById('doc-name');
+  var docPages = document.getElementById('doc-pages');
+  var docSize = document.getElementById('doc-size');
+  var panelConvert = document.getElementById('panel-convert');
+  var panelSplit = document.getElementById('panel-split');
+  var passwordCard = document.getElementById('password-card');
+  var passwordFilename = document.getElementById('password-filename');
+  var passwordInput = document.getElementById('password-input');
+  var passwordError = document.getElementById('password-error');
+  var btnUnlock = document.getElementById('btn-unlock');
+  var docLockNote = document.getElementById('doc-lock-note');
+  var pendingFile = null;
+
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+  ['dragenter', 'dragover'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(function (evt) {
+    dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    var f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  });
+  document.getElementById('doc-clear').addEventListener('click', function () {
+    state.pdf = null;
+    pendingFile = null;
+    docCard.style.display = 'none';
+    hidePasswordPrompt();
+    panelConvert.classList.remove('active');
+    panelSplit.classList.remove('active');
+    setConvertStatus('', 'neutral');
+    setSplitStatus('', 'neutral');
+  });
+
+  function isPasswordException(err) {
+    return !!err && (err.name === 'PasswordException' || /password/i.test(err.message || ''));
+  }
+
+  async function handleFile(file) {
+    var isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (!isPdf) { showUploadError('รองรับเฉพาะไฟล์ PDF เท่านั้น'); return; }
+    if (!window.pdfjsLib) { showUploadError('ไม่สามารถโหลดไลบรารีอ่าน PDF ได้ ลองรีเฟรชหน้านี้'); return; }
+    showUploadError('');
+    hidePasswordPrompt();
+    docCard.style.display = 'none';
+    dropzone.style.opacity = '.6';
+    try {
+      var buf = await file.arrayBuffer();
+      var doc;
+      try {
+        doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+      } catch (err) {
+        if (isPasswordException(err)) {
+          pendingFile = file;
+          showPasswordPrompt(file.name);
+          return;
+        }
+        throw err;
+      }
+      await finalizeLoadedDoc(file, doc, null);
+    } catch (err) {
+      showUploadError('ไม่สามารถอ่านไฟล์ PDF นี้ได้ ไฟล์อาจเสียหาย');
+      state.pdf = null;
+    } finally {
+      dropzone.style.opacity = '1';
+    }
+  }
+
+  function showPasswordPrompt(filename) {
+    passwordFilename.textContent = filename;
+    passwordError.textContent = '';
+    passwordInput.value = '';
+    passwordCard.style.display = 'flex';
+    passwordInput.focus();
+  }
+  function hidePasswordPrompt() {
+    passwordCard.style.display = 'none';
+    passwordError.textContent = '';
+    passwordInput.value = '';
+  }
+  function setUnlockBusy(busy) {
+    btnUnlock.disabled = busy;
+    btnUnlock.classList.toggle('busy', busy);
+    passwordInput.disabled = busy;
+  }
+
+  async function submitPassword() {
+    if (!pendingFile) return;
+    var pw = passwordInput.value;
+    if (!pw) { passwordError.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
+    setUnlockBusy(true);
+    passwordError.textContent = '';
+    try {
+      var buf = await pendingFile.arrayBuffer();
+      var doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf), password: pw }).promise;
+      var file = pendingFile;
+      pendingFile = null;
+      hidePasswordPrompt();
+      await finalizeLoadedDoc(file, doc, pw);
+    } catch (err) {
+      if (isPasswordException(err)) {
+        passwordError.textContent = 'รหัสผ่านไม่ถูกต้อง ลองอีกครั้ง';
+      } else {
+        passwordError.textContent = 'ไม่สามารถปลดล็อกไฟล์นี้ได้';
+      }
+    } finally {
+      setUnlockBusy(false);
+    }
+  }
+  btnUnlock.addEventListener('click', submitPassword);
+  passwordInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitPassword(); }
+  });
+
+  async function finalizeLoadedDoc(file, doc, password) {
+    var baseName = file.name.replace(/\.pdf$/i, '') || 'document';
+    state.pdf = { file: file, doc: doc, pageCount: doc.numPages, baseName: baseName, size: file.size, password: password || null };
+    await renderSummary();
+    panelConvert.classList.add('active');
+    panelSplit.classList.add('active');
+    setConvertStatus('', 'neutral');
+    setSplitStatus('', 'neutral');
+    document.getElementById('convert-pages').value = '';
+    document.getElementById('split-ranges').value = '';
+  }
+
+  async function renderSummary() {
+    docName.textContent = state.pdf.file.name;
+    docPages.textContent = state.pdf.pageCount + (state.pdf.pageCount === 1 ? ' หน้า' : ' หน้า');
+    docSize.textContent = formatSize(state.pdf.size);
+    docLockNote.style.display = state.pdf.password ? 'flex' : 'none';
+    docThumb.innerHTML = '';
+    try {
+      var canvas = await renderPageToCanvas(state.pdf.doc, 1, 0.3);
+      docThumb.appendChild(canvas);
+    } catch (e) { /* thumbnail is best-effort */ }
+    docCard.style.display = 'flex';
+  }
+
+  function showUploadError(msg) { uploadError.textContent = msg || ''; }
+
+  // ---------- Convert to images ----------
+  var btnConvert = document.getElementById('btn-convert');
+  var convertProgress = document.getElementById('convert-progress');
+  var convertStatusEl = document.getElementById('convert-status');
+
+  function setConvertStatus(msg, kind) {
+    convertStatusEl.textContent = msg || '';
+    convertStatusEl.className = 'status-line ' + (kind || 'neutral');
+  }
+  function setConvertBusy(busy) {
+    btnConvert.disabled = busy;
+    btnConvert.classList.toggle('busy', busy);
+    convertProgress.classList.toggle('show', busy);
+    if (!busy) convertProgress.querySelector('.progress-fill').style.width = '0%';
+  }
+  function updateConvertProgress(done, total) {
+    convertProgress.querySelector('.progress-fill').style.width = Math.round((done / total) * 100) + '%';
+    setConvertStatus('กำลังแปลงหน้า ' + done + '/' + total + '…', 'neutral');
+  }
+
+  btnConvert.addEventListener('click', async function () {
+    if (!state.pdf) return;
+    var format = document.getElementById('convert-format').value;
+    var scaleMultiplier = Number(document.getElementById('convert-scale').value);
+    var pagesInput = document.getElementById('convert-pages').value;
+    var pages;
+    try {
+      pages = parsePageList(pagesInput, state.pdf.pageCount) || range(1, state.pdf.pageCount);
+    } catch (err) { setConvertStatus(err.message, 'bad'); return; }
+
+    setConvertBusy(true);
+    try {
+      var mime = format === 'png' ? 'image/png' : 'image/jpeg';
+      var ext = format === 'png' ? 'png' : 'jpg';
+      var items = [];
+      for (var i = 0; i < pages.length; i++) {
+        updateConvertProgress(i, pages.length);
+        var canvas = await renderPageToCanvas(state.pdf.doc, pages[i], scaleMultiplier * 1.5);
+        var blob = await canvasToBlob(canvas, mime, mime === 'image/jpeg' ? 0.92 : undefined);
+        items.push({
+          name: state.pdf.baseName + '-page-' + pad(pages[i], state.pdf.pageCount) + '.' + ext,
+          blob: blob,
+          url: URL.createObjectURL(blob),
+          page: pages[i],
+          selected: true
+        });
+      }
+      updateConvertProgress(pages.length, pages.length);
+      setConvertStatus('', 'neutral');
+      openGallery(items, state.pdf.baseName + '-images');
+    } catch (err) {
+      setConvertStatus(err && err.message ? err.message : 'เกิดข้อผิดพลาดระหว่างแปลงไฟล์', 'bad');
+    } finally {
+      setConvertBusy(false);
+    }
+  });
+
+  // ---------- Gallery ----------
+  var galleryGrid = document.getElementById('gallery-grid');
+  var galleryCounter = document.getElementById('gallery-counter');
+  var btnGalleryToggleAll = document.getElementById('btn-gallery-toggle-all');
+  var btnGallerySave = document.getElementById('btn-gallery-save');
+  var btnGallerySaveZip = document.getElementById('btn-gallery-save-zip');
+  var gallerySaveLabel = document.getElementById('gallery-save-label');
+  var galleryStatusEl = document.getElementById('gallery-status');
+  var gallery = { items: [], baseName: '' };
+
+  function revokeGalleryUrls() {
+    gallery.items.forEach(function (it) { URL.revokeObjectURL(it.url); });
+  }
+
+  function updateGalleryCounter() {
+    var total = gallery.items.length;
+    var selected = gallery.items.filter(function (it) { return it.selected; }).length;
+    galleryCounter.textContent = 'เลือก ' + selected + ' จาก ' + total + ' รูป';
+    btnGalleryToggleAll.textContent = selected === total ? 'ไม่เลือกเลย' : 'เลือกทั้งหมด';
+    btnGallerySave.disabled = selected === 0;
+    var saveLabelBase = CLAUDE_MODE ? 'บันทึกทีละรูป' : 'บันทึกรูปทั้งหมด';
+    gallerySaveLabel.textContent = selected > 0 ? (saveLabelBase + ' (' + selected + ')') : saveLabelBase;
+    btnGallerySaveZip.disabled = selected < 2;
+    btnGallerySaveZip.style.display = selected < 2 ? 'none' : 'inline';
+  }
+
+  function openGallery(items, baseName) {
+    gallery.items = items;
+    gallery.baseName = baseName;
+    galleryGrid.innerHTML = '';
+    items.forEach(function (item) {
+      var label = document.createElement('label');
+      label.className = 'gallery-item selected';
+      var checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'gallery-item-checkbox';
+      checkbox.checked = true;
+      var img = document.createElement('img');
+      img.src = item.url;
+      img.alt = 'หน้า ' + item.page;
+      var caption = document.createElement('span');
+      caption.className = 'gallery-item-label';
+      caption.textContent = 'หน้า ' + item.page;
+      label.appendChild(checkbox);
+      label.appendChild(img);
+      label.appendChild(caption);
+      checkbox.addEventListener('change', function () {
+        item.selected = checkbox.checked;
+        label.classList.toggle('selected', checkbox.checked);
+        updateGalleryCounter();
+      });
+      galleryGrid.appendChild(label);
+    });
+    galleryStatusEl.textContent = '';
+    galleryStatusEl.className = 'status-line';
+    updateGalleryCounter();
+    viewPdf.hidden = true;
+    viewGallery.hidden = false;
+  }
+
+  function closeGallery() {
+    revokeGalleryUrls();
+    gallery.items = [];
+    galleryGrid.innerHTML = '';
+    viewGallery.hidden = true;
+    viewPdf.hidden = false;
+  }
+
+  btnGalleryToggleAll.addEventListener('click', function () {
+    var total = gallery.items.length;
+    var selectedCount = gallery.items.filter(function (it) { return it.selected; }).length;
+    var makeSelected = selectedCount !== total;
+    gallery.items.forEach(function (it, idx) {
+      it.selected = makeSelected;
+      var label = galleryGrid.children[idx];
+      label.querySelector('input').checked = makeSelected;
+      label.classList.toggle('selected', makeSelected);
+    });
+    updateGalleryCounter();
+  });
+
+  document.getElementById('btn-gallery-back').addEventListener('click', closeGallery);
+
+  function reportGallerySaveResult(savedCount, total, stoppedByUser, lastErrorMsg) {
+    if (lastErrorMsg) {
+      galleryStatusEl.textContent = savedCount > 0
+        ? ('บันทึกแล้ว ' + savedCount + ' รูป จากนั้นเกิดข้อผิดพลาด: ' + lastErrorMsg)
+        : lastErrorMsg;
+      galleryStatusEl.className = 'status-line bad';
+    } else if (stoppedByUser) {
+      galleryStatusEl.textContent = savedCount > 0 ? ('บันทึกแล้ว ' + savedCount + ' จาก ' + total + ' รูป') : 'ยกเลิกการบันทึก';
+      galleryStatusEl.className = 'status-line neutral';
+    } else {
+      galleryStatusEl.textContent = 'บันทึกแล้ว ' + savedCount + ' รูป';
+      galleryStatusEl.className = 'status-line good';
+    }
+  }
+
+  // Inside the Claude Artifact, downloads.save() is one file per call and
+  // needs one explicit accept per file — there's no batched multi-file
+  // primitive, so this loops and asks once per image.
+  async function saveGalleryClaude(selected) {
+    if (!claudeDownloads) {
+      galleryStatusEl.textContent = 'การบันทึกไฟล์ไม่พร้อมใช้งานในมุมมองนี้';
+      galleryStatusEl.className = 'status-line bad';
+      return;
+    }
+    var savedCount = 0;
+    var stoppedByUser = false;
+    var lastErrorMsg = '';
+    for (var i = 0; i < selected.length; i++) {
+      galleryStatusEl.textContent = 'กำลังบันทึกรูปที่ ' + (i + 1) + '/' + selected.length + '…';
+      galleryStatusEl.className = 'status-line neutral';
+      try {
+        await claudeDownloads.save({ filename: selected[i].name, data: selected[i].blob });
+        savedCount++;
+      } catch (err) {
+        if (err && err.code === 'declined') { stoppedByUser = true; break; }
+        lastErrorMsg = describeDownloadError(err);
+        break;
+      }
+    }
+    reportGallerySaveResult(savedCount, selected.length, stoppedByUser, lastErrorMsg);
+  }
+
+  // Deployed standalone (a normal URL, not inside the Artifact sandbox), we
+  // have real web APIs available: the Web Share API can hand every selected
+  // image to the OS share sheet in ONE call, which on iOS shows a single
+  // "Save to Photos" action for the whole batch — the one-tap-to-Camera-Roll
+  // behavior the Artifact sandbox can't offer. Browsers without file sharing
+  // fall back to plain <a download> links, fired one after another with no
+  // confirmation dialog of our own.
+  async function saveGalleryStandalone(selected) {
+    var shareFiles = null;
+    try {
+      shareFiles = selected.map(function (it) {
+        return new File([it.blob], it.name, { type: it.blob.type });
+      });
+    } catch (e) { shareFiles = null; }
+
+    if (shareFiles && canShareFiles(shareFiles)) {
+      galleryStatusEl.textContent = 'กำลังเปิดหน้าต่างบันทึก…';
+      galleryStatusEl.className = 'status-line neutral';
+      try {
+        await navigator.share({ files: shareFiles, title: gallery.baseName });
+        galleryStatusEl.textContent = 'ส่งรูปทั้งหมดไปบันทึกแล้ว';
+        galleryStatusEl.className = 'status-line good';
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          galleryStatusEl.textContent = 'ยกเลิกการบันทึก';
+          galleryStatusEl.className = 'status-line neutral';
+          return;
+        }
+        // Share failed for some other reason — fall through to downloads below.
+      }
+    }
+
+    for (var i = 0; i < selected.length; i++) {
+      triggerBlobDownload(selected[i].name, selected[i].blob);
+      await new Promise(function (resolve) { setTimeout(resolve, 180); });
+    }
+    galleryStatusEl.textContent = 'ดาวน์โหลดแล้ว ' + selected.length + ' รูป';
+    galleryStatusEl.className = 'status-line good';
+  }
+
+  btnGallerySave.addEventListener('click', async function () {
+    var selected = gallery.items.filter(function (it) { return it.selected; });
+    if (!selected.length) return;
+    btnGallerySave.disabled = true;
+    btnGallerySave.classList.add('busy');
+    btnGallerySaveZip.disabled = true;
+    galleryStatusEl.textContent = '';
+    galleryStatusEl.className = 'status-line neutral';
+    try {
+      if (CLAUDE_MODE) {
+        await saveGalleryClaude(selected);
+      } else {
+        await saveGalleryStandalone(selected);
+      }
+    } finally {
+      btnGallerySave.classList.remove('busy');
+      updateGalleryCounter();
+    }
+  });
+
+  btnGallerySaveZip.addEventListener('click', async function () {
+    var selected = gallery.items.filter(function (it) { return it.selected; });
+    if (!selected.length) return;
+    btnGallerySave.disabled = true;
+    btnGallerySaveZip.disabled = true;
+    galleryStatusEl.textContent = 'กำลังรวมไฟล์…';
+    galleryStatusEl.className = 'status-line neutral';
+    try {
+      var files = selected.map(function (it) { return { name: it.name, blob: it.blob }; });
+      var res = await deliverFiles(files, gallery.baseName);
+      galleryStatusEl.textContent = res.status === 'saved' ? 'บันทึกไฟล์สำเร็จ' : 'ส่งไฟล์เรียบร้อย';
+      galleryStatusEl.className = 'status-line good';
+    } catch (err) {
+      galleryStatusEl.textContent = describeDownloadError(err);
+      galleryStatusEl.className = 'status-line ' + (err && err.code === 'declined' ? 'neutral' : 'bad');
+    } finally {
+      updateGalleryCounter();
+    }
+  });
+
+  // ---------- Split ----------
+  var btnSplit = document.getElementById('btn-split');
+  var splitProgress = document.getElementById('split-progress');
+  var splitStatusEl = document.getElementById('split-status');
+  var splitRangesField = document.getElementById('split-ranges-field');
+
+  document.querySelectorAll('input[name="split-mode"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      splitRangesField.style.display = document.querySelector('input[name="split-mode"]:checked').value === 'custom' ? 'block' : 'none';
+    });
+  });
+
+  function setSplitStatus(msg, kind) {
+    splitStatusEl.textContent = msg || '';
+    splitStatusEl.className = 'status-line ' + (kind || 'neutral');
+  }
+  function setSplitBusy(busy) {
+    btnSplit.disabled = busy;
+    btnSplit.classList.toggle('busy', busy);
+    splitProgress.classList.toggle('show', busy);
+    if (!busy) splitProgress.querySelector('.progress-fill').style.width = '0%';
+  }
+  function updateSplitProgress(done, total) {
+    splitProgress.querySelector('.progress-fill').style.width = Math.round((done / total) * 100) + '%';
+    setSplitStatus('กำลังแยกไฟล์ ' + done + '/' + total + '…', 'neutral');
+  }
+
+  btnSplit.addEventListener('click', async function () {
+    if (!state.pdf) return;
+    if (!window.PDFLib) { setSplitStatus('ไม่สามารถโหลดไลบรารีแยกไฟล์ PDF ได้ ลองรีเฟรชหน้านี้', 'bad'); return; }
+    var mode = document.querySelector('input[name="split-mode"]:checked').value;
+    var groups;
+    try {
+      groups = mode === 'each'
+        ? range(1, state.pdf.pageCount).map(function (p) { return [p]; })
+        : parsePageGroups(document.getElementById('split-ranges').value, state.pdf.pageCount);
+    } catch (err) { setSplitStatus(err.message, 'bad'); return; }
+
+    setSplitBusy(true);
+    try {
+      var srcBytes = await state.pdf.file.arrayBuffer();
+      var srcDoc = await PDFLib.PDFDocument.load(srcBytes, { password: state.pdf.password || '', ignoreEncryption: true });
+      var files = [];
+      for (var i = 0; i < groups.length; i++) {
+        updateSplitProgress(i, groups.length);
+        var group = groups[i];
+        var newDoc = await PDFLib.PDFDocument.create();
+        var indices = group.map(function (p) { return p - 1; });
+        var copied = await newDoc.copyPages(srcDoc, indices);
+        copied.forEach(function (p) { newDoc.addPage(p); });
+        var bytes = await newDoc.save();
+        var label = group.length === 1 ? ('page-' + pad(group[0], state.pdf.pageCount)) : ('p' + group[0] + '-' + group[group.length - 1]);
+        files.push({ name: state.pdf.baseName + '-' + label + '.pdf', blob: new Blob([bytes], { type: 'application/pdf' }) });
+      }
+      updateSplitProgress(groups.length, groups.length);
+      var res = await deliverFiles(files, state.pdf.baseName + '-split');
+      setSplitStatus(res.status === 'saved' ? 'บันทึกไฟล์สำเร็จ' : 'ส่งไฟล์เรียบร้อย', 'good');
+    } catch (err) {
+      setSplitStatus(describeDownloadError(err), err && err.code === 'declined' ? 'neutral' : 'bad');
+    } finally {
+      setSplitBusy(false);
+    }
+  });
+})();
+</script>
