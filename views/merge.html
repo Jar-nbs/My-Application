@@ -1,0 +1,32 @@
+<section id="view-merge" class="animate-fade-in" hidden>
+  <div class="mt-9 mb-5">
+    <button class="inline-flex items-center gap-1.5 bg-transparent border-none text-inksoft text-sm font-semibold cursor-pointer py-1.5 hover:text-ink" id="btn-merge-back" type="button">
+      <i class="bi bi-chevron-left text-base leading-none"></i>
+      กลับหน้าหลัก
+    </button>
+  </div>
+
+  <div class="flex items-center gap-3 mb-5">
+    <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accentsoft text-accent">
+      <i class="bi bi-files text-lg leading-none"></i>
+    </span>
+    <h2 class="text-xl font-extrabold">รวมไฟล์ PDF</h2>
+  </div>
+
+  <div id="merge-dropzone" class="border-2 border-dashed border-line rounded-2xl bg-surface px-6 py-7 text-center cursor-pointer transition-colors duration-150" tabindex="0" role="button" aria-label="เพิ่มไฟล์ PDF">
+    <i class="bi bi-cloud-arrow-up text-2xl text-inkfaint mb-2 block"></i>
+    <div><strong class="text-sm font-bold">ลากไฟล์ PDF มาวางที่นี่</strong></div>
+    <p class="text-[12.5px] text-inksoft mt-1">หรือ <span class="text-accentdeep font-semibold underline underline-offset-2">เลือกไฟล์จากเครื่อง</span> — เลือกได้หลายไฟล์ เรียงลำดับก่อนรวมได้</p>
+    <div class="text-bad text-[12.5px] mt-2 text-center" id="merge-upload-error"></div>
+  </div>
+  <input type="file" id="merge-file-input" accept="application/pdf,.pdf" multiple class="sr-only" />
+
+  <div id="merge-list" class="flex flex-col gap-2 mt-4"></div>
+
+  <button class="btn w-full mt-4 px-3.5 py-2.5 rounded-xl border-none bg-accent text-accentink text-sm font-bold cursor-pointer flex items-center justify-center gap-2 hover:bg-accentdeep disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-accent" id="btn-merge" type="button" disabled>
+    <span class="spinner hidden w-[15px] h-[15px] rounded-full border-2 border-white/40 border-t-current animate-spin"></span>
+    <span class="btn-label">รวมไฟล์ (<span id="merge-count">0</span>)</span>
+  </button>
+  <div class="progress-track hidden h-[5px] rounded-full bg-surface2 mt-3 overflow-hidden" id="merge-progress"><div class="progress-fill h-full bg-accent rounded-full w-0 transition-[width] duration-150"></div></div>
+  <div class="status-line mt-2.5 text-[12.5px] min-h-[16px]" id="merge-status"></div>
+</section>

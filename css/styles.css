@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Theme tokens live as CSS custom properties (not Tailwind config values)
+   so light/dark mode keeps working via prefers-color-scheme / data-theme
+   without needing a second Tailwind build. */
+:root {
+  --paper: #f1edfb;
+  --surface: #ffffff;
+  --surface-2: #f6f2fd;
+  --ink: #15121f;
+  --ink-soft: #5c5768;
+  --ink-faint: #948fa3;
+  --line: #e7e1f3;
+  --line-strong: #15121f;
+  --accent: #9b6ef3;
+  --accent-deep: #7c4fd6;
+  --accent-soft: #efe1fd;
+  --accent-ink: #ffffff;
+  --good: #2f9e6e;
+  --good-soft: #dff5ea;
+  --bad: #ef4b4b;
+  --bad-soft: #fde3e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17141f;
+    --surface: #211d2e;
+    --surface-2: #2a2438;
+    --ink: #f1edfa;
+    --ink-soft: #b7b0c7;
+    --ink-faint: #857e97;
+    --line: #362f47;
+    --line-strong: #5a4f74;
+    --accent: #b494f5;
+    --accent-deep: #d3bdfa;
+    --accent-soft: #362a52;
+    --accent-ink: #17141f;
+    --good: #4fbf8f;
+    --good-soft: #1c3a2d;
+    --bad: #f07272;
+    --bad-soft: #3a2222;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #17141f;
+  --surface: #211d2e;
+  --surface-2: #2a2438;
+  --ink: #f1edfa;
+  --ink-soft: #b7b0c7;
+  --ink-faint: #857e97;
+  --line: #362f47;
+  --line-strong: #5a4f74;
+  --accent: #b494f5;
+  --accent-deep: #d3bdfa;
+  --accent-soft: #362a52;
+  --accent-ink: #17141f;
+  --good: #4fbf8f;
+  --good-soft: #1c3a2d;
+  --bad: #f07272;
+  --bad-soft: #3a2222;
+}
+
+[hidden] { display: none !important; }
+::placeholder { color: var(--ink-faint); }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in, .animate-spin { animation: none !important; }
+}
