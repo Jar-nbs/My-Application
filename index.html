@@ -297,66 +297,6 @@
   }
   .hint-banner svg { width: 14px; height: 14px; flex: none; }
 
-  .btn.btn-inline { width: auto; margin-top: 0; padding: 10px 22px; }
-
-  /* ---------- Gallery ---------- */
-  .gallery-head { margin: 4px 0 2px; }
-  .gallery-head h2 { font-size: 22px; font-weight: 800; }
-  .gallery-head span { font-size: 13px; color: var(--ink-soft); }
-
-  .gallery-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-top: 16px; gap: 12px; flex-wrap: wrap;
-  }
-  .toolbar-btn {
-    background: var(--surface); border: 1.5px solid var(--line-strong); color: var(--ink);
-    font-size: 13px; font-weight: 700; padding: 7px 14px; border-radius: 10px; cursor: pointer;
-  }
-  .toolbar-btn:hover { border-color: var(--accent); color: var(--accent-deep); }
-  .gallery-counter { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; font-weight: 600; }
-
-  .gallery-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-    gap: 12px; margin-top: 14px; padding-bottom: 96px;
-  }
-  .gallery-item {
-    position: relative; display: block; aspect-ratio: 3 / 4;
-    border-radius: 16px; overflow: hidden; cursor: pointer;
-    border: 1.5px solid var(--line-strong); background: var(--surface);
-    box-shadow: var(--shadow);
-  }
-  .gallery-item img {
-    width: 100%; height: 100%; object-fit: contain; display: block;
-    background: var(--surface-2); transition: opacity .15s ease;
-  }
-  .gallery-item:not(.selected) img { opacity: .35; }
-  .gallery-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow); }
-  .gallery-item-checkbox {
-    position: absolute; top: 8px; left: 8px; z-index: 2;
-    width: 19px; height: 19px; accent-color: var(--accent); cursor: pointer;
-  }
-  .gallery-item-label {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(to top, rgba(0,0,0,.6), transparent);
-    color: #fff; font-size: 11px; font-weight: 700; text-align: center;
-    padding: 10px 4px 4px;
-  }
-
-  .gallery-footer {
-    position: sticky; bottom: 16px; margin-top: 18px;
-    display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
-    background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: 18px;
-    padding: 12px 16px; box-shadow: var(--shadow);
-  }
-  .gallery-footer .status-line { margin-top: 0; flex: 1; min-width: 140px; }
-  .gallery-save-actions { display: flex; align-items: center; gap: 12px; }
-  .link-btn {
-    background: none; border: none; color: var(--ink-soft);
-    font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 2px;
-    cursor: pointer; padding: 4px; white-space: nowrap;
-  }
-  .link-btn:hover { color: var(--accent-deep); }
-  .link-btn:disabled { color: var(--ink-faint); cursor: not-allowed; text-decoration: none; }
 
   .visually-hidden {
     position: absolute; width: 1px; height: 1px; overflow: hidden;
@@ -554,39 +494,6 @@
       การบันทึกไฟล์ไม่พร้อมใช้งานในมุมมองนี้ ลองเปิดหน้านี้แบบเต็มหน้าจอ
     </div>
   </section>
-
-  <!-- ============ GALLERY VIEW ============ -->
-  <section id="view-gallery" class="view" hidden>
-    <div class="back-row">
-      <button class="back-btn" id="btn-gallery-back" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        ยกเลิกและกลับไปแก้ไข
-      </button>
-    </div>
-
-    <div class="gallery-head">
-      <h2>ผลลัพธ์การแปลง</h2>
-      <span>แตะรูปเพื่อเลือก/ไม่เลือก แล้วกดบันทึก</span>
-    </div>
-
-    <div class="gallery-toolbar">
-      <button class="toolbar-btn" id="btn-gallery-toggle-all" type="button">ไม่เลือกเลย</button>
-      <span class="gallery-counter" id="gallery-counter">เลือก 0 จาก 0 รูป</span>
-    </div>
-
-    <div class="gallery-grid" id="gallery-grid"></div>
-
-    <div class="gallery-footer">
-      <div class="status-line" id="gallery-status"></div>
-      <div class="gallery-save-actions">
-        <button class="link-btn" id="btn-gallery-save-zip" type="button">รวมเป็น ZIP ไฟล์เดียว</button>
-        <button class="btn btn-inline" id="btn-gallery-save" type="button">
-          <span class="spinner"></span>
-          <span class="btn-label" id="gallery-save-label">บันทึก</span>
-        </button>
-      </div>
-    </div>
-  </section>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -633,20 +540,11 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
 
-  function canShareFiles(files) {
-    try {
-      return !!(navigator.share && navigator.canShare && navigator.canShare({ files: files }));
-    } catch (e) {
-      return false;
-    }
-  }
-
   var state = { pdf: null };
 
   // ---------- View navigation ----------
   var viewHome = document.getElementById('view-home');
   var viewPdf = document.getElementById('view-pdf');
-  var viewGallery = document.getElementById('view-gallery');
   document.getElementById('tile-pdf').addEventListener('click', function () {
     viewHome.hidden = true;
     viewPdf.hidden = false;
@@ -940,232 +838,20 @@
     try {
       var mime = format === 'png' ? 'image/png' : 'image/jpeg';
       var ext = format === 'png' ? 'png' : 'jpg';
-      var items = [];
+      var files = [];
       for (var i = 0; i < pages.length; i++) {
         updateConvertProgress(i, pages.length);
         var canvas = await renderPageToCanvas(state.pdf.doc, pages[i], scaleMultiplier * 1.5);
         var blob = await canvasToBlob(canvas, mime, mime === 'image/jpeg' ? 0.92 : undefined);
-        items.push({
-          name: state.pdf.baseName + '-page-' + pad(pages[i], state.pdf.pageCount) + '.' + ext,
-          blob: blob,
-          url: URL.createObjectURL(blob),
-          page: pages[i],
-          selected: true
-        });
+        files.push({ name: state.pdf.baseName + '-page-' + pad(pages[i], state.pdf.pageCount) + '.' + ext, blob: blob });
       }
       updateConvertProgress(pages.length, pages.length);
-      setConvertStatus('', 'neutral');
-      openGallery(items, state.pdf.baseName + '-images');
+      var res = await deliverFiles(files, state.pdf.baseName + '-images');
+      setConvertStatus(res.status === 'saved' ? 'บันทึกไฟล์สำเร็จ' : 'ส่งไฟล์เรียบร้อย', 'good');
     } catch (err) {
-      setConvertStatus(err && err.message ? err.message : 'เกิดข้อผิดพลาดระหว่างแปลงไฟล์', 'bad');
+      setConvertStatus(describeDownloadError(err), err && err.code === 'declined' ? 'neutral' : 'bad');
     } finally {
       setConvertBusy(false);
-    }
-  });
-
-  // ---------- Gallery ----------
-  var galleryGrid = document.getElementById('gallery-grid');
-  var galleryCounter = document.getElementById('gallery-counter');
-  var btnGalleryToggleAll = document.getElementById('btn-gallery-toggle-all');
-  var btnGallerySave = document.getElementById('btn-gallery-save');
-  var btnGallerySaveZip = document.getElementById('btn-gallery-save-zip');
-  var gallerySaveLabel = document.getElementById('gallery-save-label');
-  var galleryStatusEl = document.getElementById('gallery-status');
-  var gallery = { items: [], baseName: '' };
-
-  function revokeGalleryUrls() {
-    gallery.items.forEach(function (it) { URL.revokeObjectURL(it.url); });
-  }
-
-  function updateGalleryCounter() {
-    var total = gallery.items.length;
-    var selected = gallery.items.filter(function (it) { return it.selected; }).length;
-    galleryCounter.textContent = 'เลือก ' + selected + ' จาก ' + total + ' รูป';
-    btnGalleryToggleAll.textContent = selected === total ? 'ไม่เลือกเลย' : 'เลือกทั้งหมด';
-    btnGallerySave.disabled = selected === 0;
-    var saveLabelBase = CLAUDE_MODE ? 'บันทึกทีละรูป' : 'บันทึกรูปทั้งหมด';
-    gallerySaveLabel.textContent = selected > 0 ? (saveLabelBase + ' (' + selected + ')') : saveLabelBase;
-    btnGallerySaveZip.disabled = selected < 2;
-    btnGallerySaveZip.style.display = selected < 2 ? 'none' : 'inline';
-  }
-
-  function openGallery(items, baseName) {
-    gallery.items = items;
-    gallery.baseName = baseName;
-    galleryGrid.innerHTML = '';
-    items.forEach(function (item) {
-      var label = document.createElement('label');
-      label.className = 'gallery-item selected';
-      var checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.className = 'gallery-item-checkbox';
-      checkbox.checked = true;
-      var img = document.createElement('img');
-      img.src = item.url;
-      img.alt = 'หน้า ' + item.page;
-      var caption = document.createElement('span');
-      caption.className = 'gallery-item-label';
-      caption.textContent = 'หน้า ' + item.page;
-      label.appendChild(checkbox);
-      label.appendChild(img);
-      label.appendChild(caption);
-      checkbox.addEventListener('change', function () {
-        item.selected = checkbox.checked;
-        label.classList.toggle('selected', checkbox.checked);
-        updateGalleryCounter();
-      });
-      galleryGrid.appendChild(label);
-    });
-    galleryStatusEl.textContent = '';
-    galleryStatusEl.className = 'status-line';
-    updateGalleryCounter();
-    viewPdf.hidden = true;
-    viewGallery.hidden = false;
-  }
-
-  function closeGallery() {
-    revokeGalleryUrls();
-    gallery.items = [];
-    galleryGrid.innerHTML = '';
-    viewGallery.hidden = true;
-    viewPdf.hidden = false;
-  }
-
-  btnGalleryToggleAll.addEventListener('click', function () {
-    var total = gallery.items.length;
-    var selectedCount = gallery.items.filter(function (it) { return it.selected; }).length;
-    var makeSelected = selectedCount !== total;
-    gallery.items.forEach(function (it, idx) {
-      it.selected = makeSelected;
-      var label = galleryGrid.children[idx];
-      label.querySelector('input').checked = makeSelected;
-      label.classList.toggle('selected', makeSelected);
-    });
-    updateGalleryCounter();
-  });
-
-  document.getElementById('btn-gallery-back').addEventListener('click', closeGallery);
-
-  function reportGallerySaveResult(savedCount, total, stoppedByUser, lastErrorMsg) {
-    if (lastErrorMsg) {
-      galleryStatusEl.textContent = savedCount > 0
-        ? ('บันทึกแล้ว ' + savedCount + ' รูป จากนั้นเกิดข้อผิดพลาด: ' + lastErrorMsg)
-        : lastErrorMsg;
-      galleryStatusEl.className = 'status-line bad';
-    } else if (stoppedByUser) {
-      galleryStatusEl.textContent = savedCount > 0 ? ('บันทึกแล้ว ' + savedCount + ' จาก ' + total + ' รูป') : 'ยกเลิกการบันทึก';
-      galleryStatusEl.className = 'status-line neutral';
-    } else {
-      galleryStatusEl.textContent = 'บันทึกแล้ว ' + savedCount + ' รูป';
-      galleryStatusEl.className = 'status-line good';
-    }
-  }
-
-  // Inside the Claude Artifact, downloads.save() is one file per call and
-  // needs one explicit accept per file — there's no batched multi-file
-  // primitive, so this loops and asks once per image.
-  async function saveGalleryClaude(selected) {
-    if (!claudeDownloads) {
-      galleryStatusEl.textContent = 'การบันทึกไฟล์ไม่พร้อมใช้งานในมุมมองนี้';
-      galleryStatusEl.className = 'status-line bad';
-      return;
-    }
-    var savedCount = 0;
-    var stoppedByUser = false;
-    var lastErrorMsg = '';
-    for (var i = 0; i < selected.length; i++) {
-      galleryStatusEl.textContent = 'กำลังบันทึกรูปที่ ' + (i + 1) + '/' + selected.length + '…';
-      galleryStatusEl.className = 'status-line neutral';
-      try {
-        await claudeDownloads.save({ filename: selected[i].name, data: selected[i].blob });
-        savedCount++;
-      } catch (err) {
-        if (err && err.code === 'declined') { stoppedByUser = true; break; }
-        lastErrorMsg = describeDownloadError(err);
-        break;
-      }
-    }
-    reportGallerySaveResult(savedCount, selected.length, stoppedByUser, lastErrorMsg);
-  }
-
-  // Deployed standalone (a normal URL, not inside the Artifact sandbox), we
-  // have real web APIs available: the Web Share API can hand every selected
-  // image to the OS share sheet in ONE call, which on iOS shows a single
-  // "Save to Photos" action for the whole batch — the one-tap-to-Camera-Roll
-  // behavior the Artifact sandbox can't offer. Browsers without file sharing
-  // fall back to plain <a download> links, fired one after another with no
-  // confirmation dialog of our own.
-  async function saveGalleryStandalone(selected) {
-    var shareFiles = null;
-    try {
-      shareFiles = selected.map(function (it) {
-        return new File([it.blob], it.name, { type: it.blob.type });
-      });
-    } catch (e) { shareFiles = null; }
-
-    if (shareFiles && canShareFiles(shareFiles)) {
-      galleryStatusEl.textContent = 'กำลังเปิดหน้าต่างบันทึก…';
-      galleryStatusEl.className = 'status-line neutral';
-      try {
-        await navigator.share({ files: shareFiles, title: gallery.baseName });
-        galleryStatusEl.textContent = 'ส่งรูปทั้งหมดไปบันทึกแล้ว';
-        galleryStatusEl.className = 'status-line good';
-        return;
-      } catch (err) {
-        if (err && err.name === 'AbortError') {
-          galleryStatusEl.textContent = 'ยกเลิกการบันทึก';
-          galleryStatusEl.className = 'status-line neutral';
-          return;
-        }
-        // Share failed for some other reason — fall through to downloads below.
-      }
-    }
-
-    for (var i = 0; i < selected.length; i++) {
-      triggerBlobDownload(selected[i].name, selected[i].blob);
-      await new Promise(function (resolve) { setTimeout(resolve, 180); });
-    }
-    galleryStatusEl.textContent = 'ดาวน์โหลดแล้ว ' + selected.length + ' รูป';
-    galleryStatusEl.className = 'status-line good';
-  }
-
-  btnGallerySave.addEventListener('click', async function () {
-    var selected = gallery.items.filter(function (it) { return it.selected; });
-    if (!selected.length) return;
-    btnGallerySave.disabled = true;
-    btnGallerySave.classList.add('busy');
-    btnGallerySaveZip.disabled = true;
-    galleryStatusEl.textContent = '';
-    galleryStatusEl.className = 'status-line neutral';
-    try {
-      if (CLAUDE_MODE) {
-        await saveGalleryClaude(selected);
-      } else {
-        await saveGalleryStandalone(selected);
-      }
-    } finally {
-      btnGallerySave.classList.remove('busy');
-      updateGalleryCounter();
-    }
-  });
-
-  btnGallerySaveZip.addEventListener('click', async function () {
-    var selected = gallery.items.filter(function (it) { return it.selected; });
-    if (!selected.length) return;
-    btnGallerySave.disabled = true;
-    btnGallerySaveZip.disabled = true;
-    galleryStatusEl.textContent = 'กำลังรวมไฟล์…';
-    galleryStatusEl.className = 'status-line neutral';
-    try {
-      var files = selected.map(function (it) { return { name: it.name, blob: it.blob }; });
-      var res = await deliverFiles(files, gallery.baseName);
-      galleryStatusEl.textContent = res.status === 'saved' ? 'บันทึกไฟล์สำเร็จ' : 'ส่งไฟล์เรียบร้อย';
-      galleryStatusEl.className = 'status-line good';
-    } catch (err) {
-      galleryStatusEl.textContent = describeDownloadError(err);
-      galleryStatusEl.className = 'status-line ' + (err && err.code === 'declined' ? 'neutral' : 'bad');
-    } finally {
-      updateGalleryCounter();
     }
   });
 
