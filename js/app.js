@@ -134,55 +134,60 @@
   // description, no status tag) — disabled tools are still distinguished
   // visually (dimmed, non-interactive).
   var TOOLS = [
-    { id: 'convert', label: 'แปลง PDF เป็นรูปภาพ', enabled: true, icon: 'bi-image' },
-    { id: 'split', label: 'แยกไฟล์ PDF', enabled: true, icon: 'bi-scissors' },
-    { id: 'merge', label: 'รวมไฟล์ PDF', enabled: true, icon: 'bi-files' },
-    { id: 'convert-files', label: 'แปลงไฟล์', enabled: true, icon: 'bi-arrow-repeat' },
-    { id: 'text-gen', label: 'สร้างข้อความ', enabled: true, icon: 'bi-card-text' },
-    { id: 'test-file', label: 'สร้างไฟล์ทดสอบ', enabled: true, icon: 'bi-file-earmark-plus' },
-    { id: 'compress', label: 'บีบอัดรูปภาพ', enabled: false, icon: 'bi-arrows-angle-contract' },
-    { id: 'ocr', label: 'อ่านข้อความจากภาพ', enabled: false, icon: 'bi-fonts' }
+    { id: 'convert', label: 'แปลง PDF เป็นรูปภาพ', desc: 'แยกภาพจากไฟล์ PDF อย่างง่าย', enabled: true, img: 'assets/pdf-to-image.png', color: 'pink' },
+    { id: 'split', label: 'แยกไฟล์ PDF', desc: 'แยกหน้า PDF เป็นหลายไฟล์', enabled: true, img: 'assets/split-pdf.png', color: 'yellow' },
+    { id: 'merge', label: 'รวมไฟล์ PDF', desc: 'รวมหลายไฟล์เป็นไฟล์เดียว', enabled: true, img: 'assets/merge-pdf.png', color: 'blue' },
+    { id: 'convert-files', label: 'แปลงไฟล์', desc: 'แปลงไฟล์ได้หลากหลายรูปแบบ', enabled: true, img: 'assets/convert-file.png', color: 'green' },
+    { id: 'text-gen', label: 'สร้างข้อความ', desc: 'สร้างและแก้ไขข้อความออนไลน์', enabled: true, img: 'assets/create-text.png', color: 'pink' },
+    { id: 'test-file', label: 'สร้างไฟล์ทดสอบ', desc: 'สร้างไฟล์ตัวอย่างสำหรับทดสอบ', enabled: true, img: 'assets/create-test.png', color: 'pink' },
+    { id: 'compress', label: 'บีบอัดรูปภาพ', desc: 'ลดขนาดไฟล์รูปภาพ แบบไม่เสียคุณภาพ', enabled: false, img: 'assets/compress-image.png', color: 'green' },
+    { id: 'ocr', label: 'อ่านข้อความจากภาพ', desc: 'ดึงข้อความจากรูปภาพ (OCR)', enabled: false, img: 'assets/ocr.png', color: 'blue' }
   ];
+  // Pastel background/icon/arrow theme per card color, mapped to the
+  // --card-* CSS variables in css/styles.css (light + dark mode aware).
+  var CARD_THEMES = {
+    pink: { bg: 'bg-cardpink', icon: 'bg-cardpinkdeep', arrow: 'text-cardpinkdeep' },
+    yellow: { bg: 'bg-cardyellow', icon: 'bg-cardyellowdeep', arrow: 'text-cardyellowdeep' },
+    blue: { bg: 'bg-cardblue', icon: 'bg-cardbluedeep', arrow: 'text-cardbluedeep' },
+    green: { bg: 'bg-cardgreen', icon: 'bg-cardgreendeep', arrow: 'text-cardgreendeep' }
+  };
   var $categoryGrid = $('#category-grid');
   var $toolSearch = $('#tool-search');
-  var categoryExpanded = false;
 
   function makeToolTile(tool) {
+    var theme = CARD_THEMES[tool.color];
     var tag = tool.enabled ? 'button' : 'div';
     var $el = $('<' + tag + '>');
-    $el.addClass('relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition duration-150 bg-surface border border-line shadow-sm');
+    $el.addClass('flex items-center gap-3.5 rounded-2xl px-4 py-4 transition duration-150 text-left w-full').addClass(theme.bg);
     if (tool.enabled) {
       $el.attr('type', 'button');
-      $el.addClass('cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:shadow-sm');
+      $el.addClass('cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0');
     } else {
       $el.attr({ role: 'group', 'aria-disabled': 'true' });
       $el.addClass('cursor-default');
     }
-    var badgeClass = tool.enabled ? 'bg-accentsoft text-accent' : 'bg-surface2 text-inkfaint';
-    // Icon + label dim together for a disabled tool, but the status badge
-    // below is a sibling outside this wrapper so it stays fully saturated
-    // (opacity-50 on a shared ancestor would wash the red out too).
-    var $content = $('<span>').addClass('flex items-center gap-2.5 flex-1 min-w-0');
-    if (!tool.enabled) $content.addClass('opacity-50');
-    $content.append(
-      $('<span>').addClass('flex h-8 w-8 flex-none items-center justify-center rounded-lg').addClass(badgeClass)
-        .append($('<i>').addClass('bi ' + tool.icon + ' text-base leading-none')),
-      $('<span>').addClass('text-[12.5px] font-semibold text-ink text-left leading-snug truncate').text(tool.label)
-    );
-    $el.append($content);
-    if (tool.enabled) {
-      $el.append(
-        $('<span>').addClass('absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-good')
-          .attr({ title: 'พร้อมใช้งาน', 'aria-hidden': 'true' })
-      );
-    } else {
-      $el.append(
-        $('<span>').addClass('absolute top-1.5 right-1.5 flex items-center gap-1 rounded-full bg-badsoft px-1.5 py-0.5').attr('title', 'เร็วๆ นี้').append(
+    // Icon + text dim together for a disabled tool, but the "เร็วๆ นี้" tag
+    // stays a sibling so it keeps its own saturated color.
+    var $text = $('<span>').addClass('flex-1 min-w-0');
+    if (!tool.enabled) $text.addClass('opacity-60');
+    var $title = $('<span>').addClass('flex items-center gap-1.5 flex-wrap');
+    $title.append($('<span>').addClass('text-[14.5px] font-extrabold text-ink leading-tight').text(tool.label));
+    if (!tool.enabled) {
+      $title.append(
+        $('<span>').addClass('inline-flex items-center gap-1 rounded-full bg-badsoft px-2 py-0.5').append(
           $('<span>').addClass('h-1.5 w-1.5 flex-none rounded-full bg-bad').attr('aria-hidden', 'true'),
-          $('<span>').addClass('text-[9px] font-bold text-bad leading-none whitespace-nowrap').text('เร็วๆ นี้')
+          $('<span>').addClass('text-[9.5px] font-bold text-bad leading-none whitespace-nowrap').text('เร็วๆ นี้')
         )
       );
     }
+    $text.append($title, $('<span>').addClass('block text-[12px] text-inksoft mt-0.5 truncate').text(tool.desc));
+    $el.append(
+      $('<span>').addClass('flex h-11 w-11 flex-none items-center justify-center rounded-xl overflow-hidden bg-cardicon shadow-sm')
+        .append($('<img>').attr({ src: tool.img, alt: '' }).addClass('h-full w-full object-cover')),
+      $text,
+      $('<span>').addClass('flex h-8 w-8 flex-none items-center justify-center rounded-full bg-cardicon shadow-sm').addClass(theme.arrow)
+        .append($('<i>').addClass('bi bi-arrow-right text-sm leading-none'))
+    );
     if (tool.id === 'convert') {
       $el.on('click', function () { openView($viewPdf); });
     } else if (tool.id === 'merge') {
@@ -212,28 +217,15 @@
     return $el;
   }
 
-  function makeAllTile() {
-    return $('<button>').attr('type', 'button')
-      .addClass('flex items-center justify-center rounded-xl px-3 py-2.5 bg-accentsoft border border-accentsoft text-[13px] font-bold text-ink cursor-pointer transition duration-150 hover:border-accent hover:-translate-y-0.5')
-      .text('All')
-      .on('click', function () { categoryExpanded = true; renderCategories(); });
-  }
-
   function renderCategories() {
     var query = $toolSearch.val().trim().toLowerCase();
     $categoryGrid.empty();
-    if (query) {
-      var matches = TOOLS.filter(function (t) { return t.label.toLowerCase().indexOf(query) !== -1; });
-      if (!matches.length) {
-        $categoryGrid.append($('<p>').addClass('col-span-2 text-sm text-inksoft text-center py-4').text('ไม่พบเครื่องมือที่ค้นหา'));
-        return;
-      }
-      matches.forEach(function (t) { $categoryGrid.append(makeToolTile(t)); });
+    var visible = query ? TOOLS.filter(function (t) { return t.label.toLowerCase().indexOf(query) !== -1; }) : TOOLS;
+    if (!visible.length) {
+      $categoryGrid.append($('<p>').addClass('sm:col-span-2 text-sm text-inksoft text-center py-4').text('ไม่พบเครื่องมือที่ค้นหา'));
       return;
     }
-    var visible = categoryExpanded ? TOOLS : TOOLS.slice(0, 3);
     visible.forEach(function (t) { $categoryGrid.append(makeToolTile(t)); });
-    if (!categoryExpanded && TOOLS.length > 3) $categoryGrid.append(makeAllTile());
   }
 
   $toolSearch.on('input', renderCategories);

@@ -18,7 +18,16 @@ tailwind.config = {
         good: 'var(--good)',
         goodsoft: 'var(--good-soft)',
         bad: 'var(--bad)',
-        badsoft: 'var(--bad-soft)'
+        badsoft: 'var(--bad-soft)',
+        cardpink: 'var(--card-pink)',
+        cardpinkdeep: 'var(--card-pink-deep)',
+        cardyellow: 'var(--card-yellow)',
+        cardyellowdeep: 'var(--card-yellow-deep)',
+        cardblue: 'var(--card-blue)',
+        cardbluedeep: 'var(--card-blue-deep)',
+        cardgreen: 'var(--card-green)',
+        cardgreendeep: 'var(--card-green-deep)',
+        cardicon: 'var(--card-icon)'
       },
       boxShadow: { card: '0 1px 2px rgba(21, 18, 31, 0.05)' },
       keyframes: {

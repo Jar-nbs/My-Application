@@ -20,28 +20,22 @@
   --good-soft: #dff5ea;
   --bad: #ef4b4b;
   --bad-soft: #fde3e3;
+
+  /* Pastel tool-card themes (home view category grid). */
+  --card-pink: #fce7f3;
+  --card-pink-deep: #ec6ba8;
+  --card-yellow: #fef3c7;
+  --card-yellow-deep: #e0a324;
+  --card-blue: #dbeafe;
+  --card-blue-deep: #3b82f6;
+  --card-green: #dcfce7;
+  --card-green-deep: #22a35e;
+
+  /* Tool-card icon square background — kept separate from --surface so it
+     can be tuned independently of other white surfaces (inputs, modals). */
+  --card-icon: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #17141f;
-    --surface: #211d2e;
-    --surface-2: #2a2438;
-    --ink: #f1edfa;
-    --ink-soft: #b7b0c7;
-    --ink-faint: #857e97;
-    --line: #362f47;
-    --line-strong: #5a4f74;
-    --accent: #b494f5;
-    --accent-deep: #d3bdfa;
-    --accent-soft: #362a52;
-    --accent-ink: #17141f;
-    --good: #4fbf8f;
-    --good-soft: #1c3a2d;
-    --bad: #f07272;
-    --bad-soft: #3a2222;
-  }
-}
 :root[data-theme="dark"] {
   --paper: #17141f;
   --surface: #211d2e;
@@ -59,6 +53,25 @@
   --good-soft: #1c3a2d;
   --bad: #f07272;
   --bad-soft: #3a2222;
+
+  --card-pink: #3a2431;
+  --card-pink-deep: #f083b8;
+  --card-yellow: #3a3121;
+  --card-yellow-deep: #f0bd4e;
+  --card-blue: #1e2c3f;
+  --card-blue-deep: #6ea4fb;
+  --card-green: #1c3327;
+  --card-green-deep: #4fcf8b;
+
+  --card-icon: #211d2e;
+}
+
+body {
+  background-image: url('../assets/main_background.png');
+  background-size: 100% auto;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 [hidden] { display: none !important; }
