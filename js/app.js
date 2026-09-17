@@ -41,6 +41,7 @@
   var $viewSplit = $(); // populated once views/split.html is fetched and mounted
   var $viewConvertFiles = $(); // populated once views/convert-files.html is fetched and mounted
   var $viewTextGen = $(); // populated once views/text-gen.html is fetched and mounted
+  var $viewTestFile = $(); // populated once views/test-file.html is fetched and mounted
   function openView($view) {
     $viewHome.attr('hidden', true);
     $viewPdf.attr('hidden', true);
@@ -48,6 +49,7 @@
     $viewSplit.attr('hidden', true);
     $viewConvertFiles.attr('hidden', true);
     $viewTextGen.attr('hidden', true);
+    $viewTestFile.attr('hidden', true);
     $view.removeAttr('hidden');
   }
   $('#btn-back').on('click', function () {
@@ -113,6 +115,20 @@
     console.error('ไม่สามารถโหลด views/text-gen.html ได้');
   });
 
+  // Same fetch-and-mount pattern for the "test file generator" view
+  // (views/test-file.html).
+  var testFileViewReady = $.get('views/test-file.html').done(function (html) {
+    $('#view-test-file-mount').replaceWith(html);
+    $viewTestFile = $('#view-test-file');
+    $('#btn-test-file-back').on('click', function () {
+      $viewTestFile.attr('hidden', true);
+      $viewHome.removeAttr('hidden');
+    });
+    initTestFileView();
+  }).fail(function () {
+    console.error('ไม่สามารถโหลด views/test-file.html ได้');
+  });
+
   // ---------- Category tiles ----------
   // Each tool's home tile now carries only an icon + short bold label (no
   // description, no status tag) — disabled tools are still distinguished
@@ -123,6 +139,7 @@
     { id: 'merge', label: 'รวมไฟล์ PDF', enabled: true, icon: 'bi-files' },
     { id: 'convert-files', label: 'แปลงไฟล์', enabled: true, icon: 'bi-arrow-repeat' },
     { id: 'text-gen', label: 'สร้างข้อความ', enabled: true, icon: 'bi-card-text' },
+    { id: 'test-file', label: 'สร้างไฟล์ทดสอบ', enabled: true, icon: 'bi-file-earmark-plus' },
     { id: 'compress', label: 'บีบอัดรูปภาพ', enabled: false, icon: 'bi-arrows-angle-contract' },
     { id: 'ocr', label: 'อ่านข้อความจากภาพ', enabled: false, icon: 'bi-fonts' }
   ];
@@ -186,6 +203,10 @@
     } else if (tool.id === 'text-gen') {
       $el.on('click', function () {
         $.when(textGenViewReady).done(function () { openView($viewTextGen); });
+      });
+    } else if (tool.id === 'test-file') {
+      $el.on('click', function () {
+        $.when(testFileViewReady).done(function () { openView($viewTestFile); });
       });
     }
     return $el;
@@ -1179,7 +1200,7 @@
 
     var TO_OPTIONS = {
       word: [{ value: 'pdf', label: 'PDF' }],
-      excel: [{ value: 'pdf', label: 'PDF' }, { value: 'markdown', label: 'Markdown (.md)' }, { value: 'text', label: 'ข้อความ (.txt)' }],
+      excel: [{ value: 'pdf', label: 'PDF' }, { value: 'markdown', label: 'Markdown (.md)' }, { value: 'text', label: 'ข้อความ (.txt)' }, { value: 'csv', label: 'CSV (.csv)' }],
       powerpoint: [{ value: 'pdf', label: 'PDF' }],
       image: [
         { value: 'pdf', label: 'PDF' },
@@ -1363,6 +1384,24 @@
         }).join('\n\n');
         var baseName = file.name.replace(/\.(xlsx|xls|csv)$/i, '') || 'sheet';
         out.push({ name: baseName + '.txt', blob: new Blob([text], { type: 'text/plain' }) });
+      }
+      onProgress(files.length, files.length);
+      return out;
+    }
+
+    async function runExcelToCsv(files, onProgress) {
+      var out = [];
+      for (var i = 0; i < files.length; i++) {
+        onProgress(i, files.length);
+        var file = files[i];
+        var wb = await readWorkbook(file);
+        var baseName = file.name.replace(/\.(xlsx|xls|csv)$/i, '') || 'sheet';
+        var multiSheet = wb.SheetNames.length > 1;
+        wb.SheetNames.forEach(function (name) {
+          var csv = XLSX.utils.sheet_to_csv(wb.Sheets[name]);
+          var outName = multiSheet ? baseName + '_' + name + '.csv' : baseName + '.csv';
+          out.push({ name: outName, blob: new Blob([csv], { type: 'text/csv' }) });
+        });
       }
       onProgress(files.length, files.length);
       return out;
@@ -1620,6 +1659,13 @@
         note: 'แปลงทุกชีตในไฟล์เป็นข้อความคั่นด้วย Tab (แต่ละไฟล์ = 1 .txt)',
         runLabel: 'แปลงเป็นข้อความ', zipBaseName: 'excel-to-text',
         validate: validateExcelFile, run: runExcelToText
+      },
+      'excel|csv': {
+        accept: '.xlsx,.xls,.csv', multiple: true, icon: 'bi-filetype-xlsx',
+        title: 'ลากไฟล์ Excel/CSV มาวางที่นี่', hint: 'เลือกได้หลายไฟล์ (.xlsx, .xls, .csv)',
+        note: 'แปลงแต่ละชีตเป็นไฟล์ .csv แยกกัน (ถ้าไฟล์มีหลายชีต)',
+        runLabel: 'แปลงเป็น CSV', zipBaseName: 'excel-to-csv',
+        validate: validateExcelFile, run: runExcelToCsv
       },
       'powerpoint|pdf': { disabled: true },
       'image|pdf': {
@@ -1991,5 +2037,442 @@
 
     updateOutputCount();
     updateCounts();
+  }
+
+  // ---------- Test file generator ----------
+  // Builds a dummy file of a requested size, named with the chosen
+  // extension, entirely client-side — for exercising upload flows / file
+  // size limits. Three tiers, from most to least "real":
+  //  1. REAL_EXTS — genuinely valid, openable files built with libraries
+  //     already loaded by this app (jsPDF-equivalent hand-rolled PDF,
+  //     JSZip for docx/xlsx-as-zip/zip, SheetJS for xlsx/xls, canvas for
+  //     jpg/png/webp, hand-rolled BMP/WAV). Padded as close to the
+  //     requested size as the format allows — exact for byte-container
+  //     formats, approximate for compressed/encoded ones (images).
+  //  2. TEXT_EXTS — a minimal valid wrapper for the format (so it at least
+  //     opens as plain text/XML) padded with Lorem Ipsum to an exact size.
+  //  3. Everything else — real magic-byte header (so naive content-sniffing
+  //     recognizes the type) followed by pseudo-random filler. This does
+  //     NOT open as a real file of that format — no client-side encoder is
+  //     available for these (legacy OLE doc/ppt, audio/video codecs,
+  //     rar/7z, tiff/heic, gif). Only extension and byte size are exact.
+  var TEXT_EXTS = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'css', 'js', 'ts', 'py', 'sql', 'svg', 'rtf'];
+  var REAL_EXTS = ['pdf', 'docx', 'xlsx', 'xls', 'zip', 'jpg', 'jpeg', 'png', 'webp', 'bmp', 'wav'];
+
+  function asciiBytes(str) {
+    var arr = [];
+    for (var i = 0; i < str.length; i++) arr.push(str.charCodeAt(i) & 0xFF);
+    return arr;
+  }
+  function riffHeader(formatTag) {
+    return asciiBytes('RIFF').concat([0x00, 0x00, 0x00, 0x00], asciiBytes(formatTag));
+  }
+  function isoBmffHeader(brand) {
+    return [0x00, 0x00, 0x00, 0x18].concat(asciiBytes('ftyp'), asciiBytes(brand));
+  }
+
+  var OOXML_ZIP_HEADER = [0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00];
+  var OLE_HEADER = [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+
+  var MIME_MAP = {
+    pdf: 'application/pdf', doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    xls: 'application/vnd.ms-excel',
+    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ppt: 'application/vnd.ms-powerpoint',
+    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    rtf: 'application/rtf', csv: 'text/csv', txt: 'text/plain', md: 'text/markdown',
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp',
+    gif: 'image/gif', svg: 'image/svg+xml', bmp: 'image/bmp', tiff: 'image/tiff', heic: 'image/heic',
+    mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', flac: 'audio/flac', ogg: 'audio/ogg',
+    mp4: 'video/mp4', mkv: 'video/x-matroska', avi: 'video/x-msvideo', mov: 'video/quicktime', webm: 'video/webm',
+    zip: 'application/zip', rar: 'application/vnd.rar', '7z': 'application/x-7z-compressed',
+    tar: 'application/x-tar', gz: 'application/gzip',
+    json: 'application/json', xml: 'application/xml', html: 'text/html', css: 'text/css',
+    js: 'text/javascript', ts: 'text/plain', py: 'text/x-python', sql: 'application/sql'
+  };
+
+  // Only formats with no real client-side encoder land here (see REAL_EXTS
+  // above for the ones that don't).
+  var MAGIC_MAP = {
+    doc: OLE_HEADER, ppt: OLE_HEADER,
+    pptx: OOXML_ZIP_HEADER,
+    gif: asciiBytes('GIF89a'),
+    tiff: [0x49, 0x49, 0x2A, 0x00],
+    heic: isoBmffHeader('heic'),
+    mp3: asciiBytes('ID3').concat([0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
+    m4a: isoBmffHeader('M4A '),
+    flac: asciiBytes('fLaC'),
+    ogg: asciiBytes('OggS'),
+    mp4: isoBmffHeader('mp42'),
+    mov: isoBmffHeader('qt  '),
+    mkv: [0x1A, 0x45, 0xDF, 0xA3],
+    webm: [0x1A, 0x45, 0xDF, 0xA3],
+    avi: riffHeader('AVI '),
+    rar: [0x52, 0x61, 0x72, 0x21, 0x1A, 0x07, 0x00],
+    '7z': [0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C],
+    gz: [0x1F, 0x8B, 0x08],
+    tar: []
+  };
+
+  var TEXT_WRAP = {
+    json: { prefix: '{"test_data":"', suffix: '"}' },
+    xml: { prefix: '<?xml version="1.0" encoding="UTF-8"?><testFile><![CDATA[', suffix: ']]></testFile>' },
+    html: { prefix: '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><!-- ', suffix: ' --></body></html>' },
+    css: { prefix: '/* test data */\nbody::before{content:"', suffix: '"}' },
+    js: { prefix: '// test data\nvar testFileFiller = "', suffix: '";\n' },
+    ts: { prefix: '// test data\nconst testFileFiller: string = "', suffix: '";\n' },
+    py: { prefix: '# test data\ntest_file_filler = "', suffix: '"\n' },
+    sql: { prefix: "-- test data\nSELECT '", suffix: "';\n" },
+    svg: { prefix: '<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><!-- ', suffix: ' --></svg>' },
+    rtf: { prefix: '{\\rtf1\\ansi\\deff0 ', suffix: ' }' }
+  };
+
+  function buildTextContent(ext, totalBytes) {
+    if (ext === 'csv') return repeatToLength('test,file,generator,data\n', totalBytes);
+    if (ext === 'txt' || ext === 'md') return repeatToLength(LOREM_IPSUM_BASE, totalBytes);
+    var wrap = TEXT_WRAP[ext] || { prefix: '', suffix: '' };
+    var overhead = wrap.prefix.length + wrap.suffix.length;
+    if (overhead >= totalBytes) return repeatToLength(LOREM_IPSUM_BASE, totalBytes);
+    return wrap.prefix + repeatToLength(LOREM_IPSUM_BASE, totalBytes - overhead) + wrap.suffix;
+  }
+
+  function buildRandomFill(length) {
+    var chunk = new Uint8Array(length);
+    if (window.crypto && window.crypto.getRandomValues) {
+      var STEP = 65536; // crypto.getRandomValues caps out per call
+      for (var offset = 0; offset < length; offset += STEP) {
+        chunk.set(window.crypto.getRandomValues(new Uint8Array(Math.min(STEP, length - offset))), offset);
+      }
+    } else {
+      for (var i = 0; i < length; i++) chunk[i] = Math.floor(Math.random() * 256);
+    }
+    return chunk;
+  }
+
+  function buildBinaryBytes(ext, totalBytes) {
+    var header = MAGIC_MAP[ext] || [];
+    var bytes = new Uint8Array(totalBytes);
+    var headerLen = Math.min(header.length, totalBytes);
+    for (var h = 0; h < headerLen; h++) bytes[h] = header[h];
+    var fillLen = totalBytes - headerLen;
+    if (fillLen > 0) {
+      // One small random "seed" tiled across the remaining space — far
+      // faster than filling byte-by-byte for large requested sizes, while
+      // still avoiding an all-zero (trivially compressible) file.
+      var seedLen = Math.min(fillLen, 65536);
+      var seed = buildRandomFill(seedLen);
+      var pos = headerLen;
+      while (pos < totalBytes) {
+        var take = Math.min(seedLen, totalBytes - pos);
+        bytes.set(seed.subarray(0, take), pos);
+        pos += take;
+      }
+    }
+    return bytes;
+  }
+
+  // ----- REAL_EXTS builders: each returns (a Promise of) a genuinely
+  // openable Blob, padded as close to totalBytes as the format allows. -----
+
+  function pad10(n) {
+    var s = String(n);
+    while (s.length < 10) s = '0' + s;
+    return s;
+  }
+
+  // Hand-rolled minimal single-page PDF (no jsPDF dependency needed — full
+  // control over byte offsets means the requested size can be hit exactly
+  // via a trailing `%` comment, which PDF readers ignore like any comment).
+  function buildPdfString(paddingLen) {
+    var padding = paddingLen > 0 ? repeatToLength(LOREM_IPSUM_BASE, paddingLen) : '';
+    var contentStream = 'BT /F1 14 Tf 20 270 Td (Generated test file) Tj ET';
+    var defs = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+      '<< /Length ' + contentStream.length + ' >>\nstream\n' + contentStream + '\nendstream',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'
+    ];
+    var body = '%PDF-1.4\n';
+    var offsets = [];
+    for (var i = 0; i < defs.length; i++) {
+      offsets.push(body.length);
+      body += (i + 1) + ' 0 obj\n' + defs[i] + '\nendobj\n';
+    }
+    if (padding) body += '% ' + padding + '\n';
+    var xrefOffset = body.length;
+    var xref = 'xref\n0 ' + (defs.length + 1) + '\n0000000000 65535 f \n';
+    for (var j = 0; j < offsets.length; j++) xref += pad10(offsets[j]) + ' 00000 n \n';
+    body += xref + 'trailer\n<< /Size ' + (defs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xrefOffset + '\n%%EOF';
+    return body;
+  }
+  function buildRealPdfBlob(totalBytes) {
+    var text = buildPdfString(0);
+    var fillerLen = 0;
+    for (var i = 0; i < 4 && text.length !== totalBytes; i++) {
+      fillerLen = Math.max(0, fillerLen + (totalBytes - text.length));
+      text = buildPdfString(fillerLen);
+    }
+    return new Blob([text], { type: 'application/pdf' });
+  }
+
+  // Hand-rolled minimal OOXML .docx via JSZip (same technique the "PDF to
+  // Word" converter above uses) — STORE (no DEFLATE) so appending N bytes
+  // of padding text grows the final file by ~N bytes, making the target
+  // size reachable in a couple of measure-and-retry passes.
+  async function buildDocxZip(paddingLen) {
+    var padding = paddingLen > 0 ? repeatToLength(LOREM_IPSUM_BASE, paddingLen) : '';
+    var documentXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:body><w:p><w:r><w:t xml:space="preserve">Generated test file. ' + padding + '</w:t></w:r></w:p>' +
+      '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417"/></w:sectPr>' +
+      '</w:body></w:document>';
+    var contentTypesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+      '</Types>';
+    var relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+      '</Relationships>';
+    var zip = new JSZip();
+    zip.file('[Content_Types].xml', contentTypesXml);
+    zip.folder('_rels').file('.rels', relsXml);
+    zip.folder('word').file('document.xml', documentXml);
+    return zip.generateAsync({ type: 'blob', compression: 'STORE', mimeType: MIME_MAP.docx });
+  }
+  async function buildRealDocxBlob(totalBytes) {
+    var blob = await buildDocxZip(0);
+    var fillerLen = 0;
+    for (var i = 0; i < 2 && blob.size !== totalBytes; i++) {
+      fillerLen = Math.max(0, fillerLen + (totalBytes - blob.size));
+      blob = await buildDocxZip(fillerLen);
+    }
+    return blob;
+  }
+
+  // A generic .zip containing one padded text file (STORE mode — same
+  // exact-size-by-measurement trick as the docx builder above).
+  async function buildZipContainer(paddingLen) {
+    var content = 'Generated test file.\n' + (paddingLen > 0 ? repeatToLength(LOREM_IPSUM_BASE, paddingLen) : '');
+    var zip = new JSZip();
+    zip.file('test-file.txt', content);
+    return zip.generateAsync({ type: 'blob', compression: 'STORE' });
+  }
+  async function buildRealZipBlob(totalBytes) {
+    var blob = await buildZipContainer(0);
+    var fillerLen = 0;
+    for (var i = 0; i < 2 && blob.size !== totalBytes; i++) {
+      fillerLen = Math.max(0, fillerLen + (totalBytes - blob.size));
+      blob = await buildZipContainer(fillerLen);
+    }
+    return blob;
+  }
+
+  // SheetJS workbook, padding spread across multiple rows (one cell can't
+  // exceed Excel's ~32,767-character limit) so even a large requested size
+  // stays a workbook Excel accepts rather than one oversized cell.
+  function buildPaddedWorkbook(paddingLen) {
+    var CELL_CAP = 30000;
+    var rows = [['Generated test file']];
+    var remaining = paddingLen;
+    while (remaining > 0) {
+      var take = Math.min(CELL_CAP, remaining);
+      rows.push([repeatToLength(LOREM_IPSUM_BASE, take)]);
+      remaining -= take;
+    }
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Sheet1');
+    return wb;
+  }
+  function buildRealXlsxBlob(totalBytes) {
+    var out = XLSX.write(buildPaddedWorkbook(0), { bookType: 'xlsx', type: 'array', compression: false });
+    var fillerLen = 0;
+    for (var i = 0; i < 2 && out.length !== totalBytes; i++) {
+      fillerLen = Math.max(0, fillerLen + (totalBytes - out.length));
+      out = XLSX.write(buildPaddedWorkbook(fillerLen), { bookType: 'xlsx', type: 'array', compression: false });
+    }
+    return new Blob([out], { type: MIME_MAP.xlsx });
+  }
+  function buildRealXlsBlob(totalBytes) {
+    var out = XLSX.write(buildPaddedWorkbook(0), { bookType: 'biff8', type: 'array' });
+    var fillerLen = 0;
+    for (var i = 0; i < 2 && out.length !== totalBytes; i++) {
+      fillerLen = Math.max(0, fillerLen + (totalBytes - out.length));
+      out = XLSX.write(buildPaddedWorkbook(fillerLen), { bookType: 'biff8', type: 'array' });
+    }
+    return new Blob([out], { type: MIME_MAP.xls });
+  }
+
+  // Real raster image via canvas.toBlob (same API the image-conversion
+  // tools above already use) filled with pseudo-random pixels. Compressed
+  // output size can't be dictated directly, so this scales canvas
+  // dimensions by the observed size ratio and re-encodes a few times to
+  // converge close to the target — never exact for jpg/png/webp.
+  function buildNoiseCanvas(width, height) {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    var ctx = canvas.getContext('2d');
+    var imgData = ctx.createImageData(width, height);
+    for (var i = 0; i < imgData.data.length; i += 4) {
+      var n = Math.floor(Math.random() * 256);
+      imgData.data[i] = n;
+      imgData.data[i + 1] = (n + 85) % 256;
+      imgData.data[i + 2] = (n + 170) % 256;
+      imgData.data[i + 3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return canvas;
+  }
+  function canvasToBlobAsync(canvas, mime, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (b) { b ? resolve(b) : reject(new Error('เข้ารหัสรูปภาพล้มเหลว')); }, mime, quality);
+    });
+  }
+  async function buildRealImageBlob(ext, totalBytes) {
+    var mime = MIME_MAP[ext];
+    var quality = (ext === 'jpg' || ext === 'jpeg') ? 0.85 : undefined;
+    var width = Math.max(8, Math.round(Math.sqrt(Math.max(64, totalBytes / 1.2))));
+    var height = width;
+    var blob = await canvasToBlobAsync(buildNoiseCanvas(width, height), mime, quality);
+    for (var i = 0; i < 4 && Math.abs(blob.size - totalBytes) > Math.max(512, totalBytes * 0.05); i++) {
+      var scale = Math.sqrt(totalBytes / Math.max(1, blob.size));
+      width = Math.max(8, Math.round(width * scale));
+      height = Math.max(8, Math.round(height * scale));
+      blob = await canvasToBlobAsync(buildNoiseCanvas(width, height), mime, quality);
+    }
+    return blob;
+  }
+
+  // Hand-rolled uncompressed 24bpp BMP — the simplest real image format to
+  // size precisely, since file size is pure arithmetic (54-byte header +
+  // width x height x 3, row-padded to 4 bytes) with no encoder involved.
+  function buildBmpBlob(totalBytes) {
+    var HEADER_SIZE = 54;
+    var available = Math.max(3, totalBytes - HEADER_SIZE);
+    var width = Math.max(1, Math.round(Math.sqrt(available / 3)));
+    var rowSize = Math.ceil(width * 3 / 4) * 4;
+    var height = Math.max(1, Math.floor(available / rowSize));
+    var pixelDataSize = rowSize * height;
+    var fileSize = HEADER_SIZE + pixelDataSize;
+    var buf = new Uint8Array(fileSize);
+    var dv = new DataView(buf.buffer);
+    buf[0] = 0x42; buf[1] = 0x4D; // 'BM'
+    dv.setUint32(2, fileSize, true);
+    dv.setUint32(10, HEADER_SIZE, true);
+    dv.setUint32(14, 40, true);
+    dv.setInt32(18, width, true);
+    dv.setInt32(22, height, true);
+    dv.setUint16(26, 1, true);
+    dv.setUint16(28, 24, true);
+    dv.setUint32(34, pixelDataSize, true);
+    dv.setInt32(38, 2835, true);
+    dv.setInt32(42, 2835, true);
+    for (var i = HEADER_SIZE; i < fileSize; i++) buf[i] = (i * 37) & 0xFF;
+    return new Blob([buf], { type: MIME_MAP.bmp });
+  }
+
+  // Hand-rolled 16-bit mono PCM WAV (silence) — like BMP, an uncompressed
+  // format where size is pure arithmetic, so the target is hit exactly
+  // (within 1 byte, rounded to a whole sample).
+  function writeAscii(buf, offset, str) {
+    for (var i = 0; i < str.length; i++) buf[offset + i] = str.charCodeAt(i) & 0xFF;
+  }
+  function buildWavBlob(totalBytes) {
+    var HEADER_SIZE = 44;
+    var dataSize = Math.max(0, totalBytes - HEADER_SIZE);
+    dataSize -= (dataSize % 2); // whole 16-bit samples
+    var fileSize = HEADER_SIZE + dataSize;
+    var buf = new Uint8Array(fileSize);
+    var dv = new DataView(buf.buffer);
+    var sampleRate = 44100;
+    writeAscii(buf, 0, 'RIFF');
+    dv.setUint32(4, fileSize - 8, true);
+    writeAscii(buf, 8, 'WAVE');
+    writeAscii(buf, 12, 'fmt ');
+    dv.setUint32(16, 16, true);
+    dv.setUint16(20, 1, true);
+    dv.setUint16(22, 1, true);
+    dv.setUint32(24, sampleRate, true);
+    dv.setUint32(28, sampleRate * 2, true);
+    dv.setUint16(32, 2, true);
+    dv.setUint16(34, 16, true);
+    writeAscii(buf, 36, 'data');
+    dv.setUint32(40, dataSize, true);
+    return new Blob([buf], { type: MIME_MAP.wav });
+  }
+
+  async function buildRealBlob(ext, totalBytes) {
+    switch (ext) {
+      case 'pdf': return buildRealPdfBlob(totalBytes);
+      case 'docx': return buildRealDocxBlob(totalBytes);
+      case 'xlsx': return buildRealXlsxBlob(totalBytes);
+      case 'xls': return buildRealXlsBlob(totalBytes);
+      case 'zip': return buildRealZipBlob(totalBytes);
+      case 'jpg': case 'jpeg': case 'png': case 'webp': return buildRealImageBlob(ext, totalBytes);
+      case 'bmp': return buildBmpBlob(totalBytes);
+      case 'wav': return buildWavBlob(totalBytes);
+    }
+  }
+
+  function initTestFileView() {
+    var $extSelect = $('#testfile-ext');
+    var $sizeInput = $('#testfile-size');
+    var $unitSelect = $('#testfile-unit');
+    var $nameInput = $('#testfile-filename');
+    var $btnGenerate = $('#btn-testfile-generate');
+    var $statusEl = $('#testfile-status');
+
+    var UNIT_BYTES = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
+    var MAX_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB safety cap — larger blobs risk crashing the tab
+
+    function setStatus(msg, kind) {
+      $statusEl.text(msg || '');
+      $statusEl.removeClass('text-good text-bad text-inksoft');
+      if (kind === 'good') $statusEl.addClass('text-good');
+      else if (kind === 'bad') $statusEl.addClass('text-bad');
+      else $statusEl.addClass('text-inksoft');
+    }
+    function setBusy(busy) {
+      $btnGenerate.prop('disabled', busy);
+      $btnGenerate.toggleClass('busy', busy);
+      $btnGenerate.find('.spinner').toggleClass('hidden', !busy).toggleClass('inline-block', busy);
+    }
+
+    $btnGenerate.on('click', async function () {
+      var sizeVal = parseFloat($sizeInput.val());
+      if (!sizeVal || sizeVal <= 0) { setStatus('กรุณาระบุขนาดไฟล์ที่มากกว่า 0', 'bad'); return; }
+      var totalBytes = Math.round(sizeVal * (UNIT_BYTES[$unitSelect.val()] || 1));
+      if (totalBytes <= 0) { setStatus('กรุณาระบุขนาดไฟล์ที่มากกว่า 0', 'bad'); return; }
+      if (totalBytes > MAX_BYTES) { setStatus('ขนาดไฟล์เกินขีดจำกัด 2 GB ต่อไฟล์', 'bad'); return; }
+
+      var ext = $extSelect.val();
+      var baseName = ($nameInput.val() || 'test-file').trim().replace(/[\\/:*?"<>|]+/g, '_') || 'test-file';
+      var fileName = baseName + '.' + ext;
+
+      setBusy(true);
+      setStatus('', 'neutral');
+      try {
+        var blob;
+        if (REAL_EXTS.indexOf(ext) !== -1) {
+          blob = await buildRealBlob(ext, totalBytes);
+        } else if (TEXT_EXTS.indexOf(ext) !== -1) {
+          blob = new Blob([buildTextContent(ext, totalBytes)], { type: MIME_MAP[ext] || 'text/plain' });
+        } else {
+          blob = new Blob([buildBinaryBytes(ext, totalBytes)], { type: MIME_MAP[ext] || 'application/octet-stream' });
+        }
+        var sizeNote = blob.size === totalBytes ? formatSize(blob.size) : formatSize(blob.size) + ' — ขอไว้ ' + formatSize(totalBytes);
+        var res = await deliverFiles([{ name: fileName, blob: blob }], baseName);
+        setStatus((res.status === 'saved' ? 'สร้างไฟล์และบันทึกสำเร็จ (' : 'สร้างไฟล์และส่งเรียบร้อย (') + sizeNote + ')', 'good');
+      } catch (err) {
+        setStatus(describeDownloadError(err), err && err.code === 'declined' ? 'neutral' : 'bad');
+      } finally {
+        setBusy(false);
+      }
+    });
   }
 })(jQuery);

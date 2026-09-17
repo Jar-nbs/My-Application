@@ -1,0 +1,113 @@
+<section id="view-test-file" class="animate-fade-in" hidden>
+  <div class="mt-9 mb-5">
+    <button class="inline-flex items-center gap-1.5 bg-transparent border-none text-inksoft text-sm font-semibold cursor-pointer py-1.5 hover:text-ink" id="btn-test-file-back" type="button">
+      <i class="bi bi-chevron-left text-base leading-none"></i>
+      กลับหน้าหลัก
+    </button>
+  </div>
+
+  <div class="flex items-center gap-3 mb-5">
+    <span class="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accentsoft text-accent">
+      <i class="bi bi-file-earmark-plus text-lg leading-none"></i>
+    </span>
+    <h2 class="text-xl font-extrabold">สร้างไฟล์ทดสอบ</h2>
+  </div>
+
+  <div class="panel bg-surface border border-line rounded-2xl p-4 shadow-sm">
+    <div class="mb-3">
+      <label class="block text-[12px] font-semibold text-inksoft mb-1.5" for="testfile-ext">นามสกุลไฟล์</label>
+      <select id="testfile-ext" class="w-full px-2.5 py-2 rounded-lg border border-line bg-surface2 text-ink text-[13px] focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1">
+        <optgroup label="เอกสาร">
+          <option value="pdf">.pdf</option>
+          <option value="doc">.doc</option>
+          <option value="docx">.docx</option>
+          <option value="rtf">.rtf</option>
+        </optgroup>
+        <optgroup label="สเปรดชีต">
+          <option value="xls">.xls</option>
+          <option value="xlsx">.xlsx</option>
+          <option value="csv">.csv</option>
+        </optgroup>
+        <optgroup label="นำเสนอ">
+          <option value="ppt">.ppt</option>
+          <option value="pptx">.pptx</option>
+        </optgroup>
+        <optgroup label="รูปภาพ">
+          <option value="jpg">.jpg</option>
+          <option value="jpeg">.jpeg</option>
+          <option value="png">.png</option>
+          <option value="webp">.webp</option>
+          <option value="gif">.gif</option>
+          <option value="svg">.svg</option>
+          <option value="bmp">.bmp</option>
+          <option value="tiff">.tiff</option>
+          <option value="heic">.heic</option>
+        </optgroup>
+        <optgroup label="เสียง">
+          <option value="mp3">.mp3</option>
+          <option value="wav">.wav</option>
+          <option value="m4a">.m4a</option>
+          <option value="flac">.flac</option>
+          <option value="ogg">.ogg</option>
+        </optgroup>
+        <optgroup label="วิดีโอ">
+          <option value="mp4">.mp4</option>
+          <option value="mkv">.mkv</option>
+          <option value="avi">.avi</option>
+          <option value="mov">.mov</option>
+          <option value="webm">.webm</option>
+        </optgroup>
+        <optgroup label="ไฟล์บีบอัด">
+          <option value="zip">.zip</option>
+          <option value="rar">.rar</option>
+          <option value="7z">.7z</option>
+          <option value="tar">.tar</option>
+          <option value="gz">.gz</option>
+        </optgroup>
+        <optgroup label="ข้อความ/โค้ด">
+          <option value="txt">.txt</option>
+          <option value="md">.md</option>
+          <option value="json">.json</option>
+          <option value="xml">.xml</option>
+          <option value="html">.html</option>
+          <option value="css">.css</option>
+          <option value="js">.js</option>
+          <option value="ts">.ts</option>
+          <option value="py">.py</option>
+          <option value="sql">.sql</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="mb-3">
+        <label class="block text-[12px] font-semibold text-inksoft mb-1.5" for="testfile-size">ขนาดไฟล์</label>
+        <input type="number" id="testfile-size" min="1" step="any" value="1" class="w-full px-2.5 py-2 rounded-lg border border-line bg-surface2 text-ink text-[13px] focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1" />
+      </div>
+      <div class="mb-3">
+        <label class="block text-[12px] font-semibold text-inksoft mb-1.5" for="testfile-unit">หน่วย</label>
+        <select id="testfile-unit" class="w-full px-2.5 py-2 rounded-lg border border-line bg-surface2 text-ink text-[13px] focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1">
+          <option value="b">Bytes</option>
+          <option value="kb">KB</option>
+          <option value="mb" selected>MB</option>
+          <option value="gb">GB</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="block text-[12px] font-semibold text-inksoft mb-1.5" for="testfile-filename">ชื่อไฟล์ (ไม่ต้องใส่นามสกุล)</label>
+      <input type="text" id="testfile-filename" value="test-file" class="w-full px-2.5 py-2 rounded-lg border border-line bg-surface2 text-ink text-[13px] focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1" />
+    </div>
+
+    <button class="btn w-full px-3.5 py-2.5 rounded-xl border-none bg-accent text-accentink text-sm font-bold cursor-pointer flex items-center justify-center gap-2 hover:bg-accentdeep" id="btn-testfile-generate" type="button">
+      <span class="spinner hidden w-[15px] h-[15px] rounded-full border-2 border-white/40 border-t-current animate-spin"></span>
+      <span class="btn-label">สร้างและดาวน์โหลด</span>
+    </button>
+    <div class="status-line mt-2.5 text-[12.5px] min-h-[16px]" id="testfile-status"></div>
+    <p class="text-[12px] text-inksoft mt-2 leading-relaxed">
+      pdf, docx, xlsx, xls, zip, jpg/jpeg, png, webp, bmp, wav และไฟล์ข้อความ/โค้ดทุกชนิด (txt, md, csv, json, xml, html, css, js, ts, py, sql, svg, rtf) เปิดได้จริงตามฟอร์แมต — ขนาดตรงเป๊ะสำหรับไฟล์ประเภทข้อความ/เอกสาร ส่วนรูปภาพ (jpg/png/webp/bmp) ขนาดจะใกล้เคียงที่ขอ ไม่เป๊ะ 100% เพราะควบคุมขนาดหลังบีบอัด/ตารางพิกเซลตรงๆ ไม่ได้<br>
+      ฟอร์แมตอื่น (doc, ppt, pptx, gif, tiff, heic, mp3, m4a, flac, ogg, mp4, mkv, avi, mov, webm, rar, 7z, tar, gz) ยังไม่มีตัวสร้างไฟล์จริงฝั่งเบราว์เซอร์ — ได้แค่ไฟล์ที่มีนามสกุล/ขนาดตรงตามที่ขอ แต่เปิดดูเนื้อหาไม่ได้ (จำกัดสูงสุด 2 GB ต่อไฟล์)
+    </p>
+  </div>
+</section>
